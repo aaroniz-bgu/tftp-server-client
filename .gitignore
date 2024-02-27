@@ -1,4 +1,14 @@
+# JetBrains thingy:
 .idea/*
 .idea/
+
+# Mac thingy:
 .DS_Store
 */.DS_Store
+
+# Bunch of useless stuff
+/server/Flies/
+/server/Flies/*
+/client/B
+/client/kelev yam.txt
+/client/kelev_yam.mp3

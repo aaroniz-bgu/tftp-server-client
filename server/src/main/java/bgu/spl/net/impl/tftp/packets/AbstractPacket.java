@@ -1,5 +1,7 @@
 package bgu.spl.net.impl.tftp.packets;
 
+import bgu.spl.net.impl.tftp.GlobalConstants;
+
 import java.util.Collection;
 
 public abstract class AbstractPacket {

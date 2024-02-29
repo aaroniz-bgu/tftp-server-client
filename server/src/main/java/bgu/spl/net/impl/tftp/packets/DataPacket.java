@@ -1,10 +1,9 @@
 package bgu.spl.net.impl.tftp.packets;
 
 import bgu.spl.net.impl.tftp.EncodeDecodeHelper;
-import com.sun.tools.javac.util.ArrayUtils;
+import bgu.spl.net.impl.tftp.GlobalConstants;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  *

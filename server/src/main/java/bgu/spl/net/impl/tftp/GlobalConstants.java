@@ -20,13 +20,4 @@ public class GlobalConstants {
      * Termination character for non-constant length packets.
      */
     public static final byte TERMINATOR = 0;
-
-    /**
-     * Saves data about operations that are terminated by a delimiter.
-     */
-    public static final short[] IS_OP_TERMINATED = {1,1,0,0,1,0,1,1,1,0};
-
-    public static boolean isOpTerminated(short opcode) {
-        return IS_OP_TERMINATED[opcode] == 1;
-    }
 }

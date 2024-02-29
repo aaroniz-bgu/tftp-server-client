@@ -1,8 +1,5 @@
 package bgu.spl.net.impl.tftp;
 
-/**
- * Uses the big endian form.
- */
 public class EncodeDecodeHelper {
 
     /**

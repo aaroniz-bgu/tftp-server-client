@@ -6,8 +6,11 @@ import java.util.Collection;
 
 public abstract class AbstractPacket {
     public final short opCode;
+    public BroadcastPacket broadcast;
+
     public AbstractPacket(short opCode) {
         this.opCode = opCode;
+        this.broadcast = null;
     }
 
     /**
@@ -19,7 +22,22 @@ public abstract class AbstractPacket {
     /**
      * @return BroadcastPacket if this operation should broadcast itself to all the connections.
      */
-    abstract public AbstractPacket getBroadcastPacket();
+    public AbstractPacket getBroadcastPacket() {
+        return broadcast;
+    }
+
+    /**
+     * Being set by business layer, if needed!
+     * Sets a new {@link BroadcastPacket} if needed.
+     * @apiNote If not set, broadcast won't be sent.
+     * @implNote Cannot be set again once been set.
+     * @param broadcastPacket The {@link BroadcastPacket} to be broadcast.
+     */
+    public void setBroadcastPacket(BroadcastPacket broadcastPacket) {
+        if(broadcast == null) {
+            this.broadcast = broadcastPacket;
+        }
+    }
 
     /**
      * Utility function that concats arrays together.

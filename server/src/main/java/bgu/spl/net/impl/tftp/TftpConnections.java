@@ -1,6 +1,5 @@
 package bgu.spl.net.impl.tftp;
 
-import bgu.spl.net.srv.BlockingConnectionHandler;
 import bgu.spl.net.srv.ConnectionHandler;
 import bgu.spl.net.srv.Connections;
 
@@ -24,7 +23,7 @@ public class TftpConnections implements Connections<byte[]> {
         }
         connections.put(connectionId, handler);
         // return true;
-        // FIXME https://moodle.bgu.ac.il/moodle/mod/forum/discuss.php?d=703060#p1061585
+        // FIXME if https://moodle.bgu.ac.il/moodle/mod/forum/discuss.php?d=703060#p1061585
     }
 
     @Override

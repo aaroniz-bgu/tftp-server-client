@@ -37,7 +37,7 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             AbstractPacket broadcast = controllerResponse.getBroadcastPacket();
             if(broadcast != null) {
                 byte[] broadcastBytes = broadcast.getBytes();
-                // TODO.
+                connections.broadcast(broadcastBytes);
             }
             connections.send(connectionId, controllerResponse.getBytes());
         }

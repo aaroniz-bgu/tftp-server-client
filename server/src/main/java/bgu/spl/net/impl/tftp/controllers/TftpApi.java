@@ -8,20 +8,6 @@ import bgu.spl.net.impl.tftp.packets.AbstractPacket;
  */
 public class TftpApi {
 
-    private int connectionId;
-    private TftpConnections connections;
-    // private TftpServices service; <- this is an interface.
-
-    /**
-     * Creates a new API.
-     * @param connectionId
-     * @param connections
-     */
-    public TftpApi(int connectionId, TftpConnections connections/*, TftpServices service*/) {
-        this.connectionId = connectionId;
-        this.connections  = connections;
-    }
-
     /**
      * Logins a new user whether it's not logged in yet.
      * @param request User's request.
@@ -81,16 +67,7 @@ public class TftpApi {
      * @return AcknowledgementPacket or ErrorPacket.
      */
     public AbstractPacket disconnectRequest() {
-        try {
-            connections.disconnect(connectionId);
-            connections = null; // To calm down the gc.
-            //service = null // To really calm down the gc.
-            //create AcknowledgementPacket and send it.
-            return null;
-        } catch (RuntimeException e) {
-            //create an ErrorPacket and send it
-            return null;
-        }
+        throw new UnsupportedOperationException("");
     }
 
 }

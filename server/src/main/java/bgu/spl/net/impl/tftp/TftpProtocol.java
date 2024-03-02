@@ -31,20 +31,19 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
         }
         short opCode = EncodeDecodeHelper.byteToShort(new byte[]{message[0], message[1]});
         Operation op = Operation.OPS[opCode];
-
         AbstractPacket controllerResponse = mapMessageToApi(controller, op, message);
 
         if(controllerResponse != null) {
             AbstractPacket broadcast = controllerResponse.getBroadcastPacket();
             if(broadcast != null) {
+                byte[] broadcastBytes = broadcast.getBytes();
                 // TODO.
             }
+            connections.send(connectionId, controllerResponse.getBytes());
         }
 
         if(op == Operation.DISC) {
             disconnect();
-        } else {
-
         }
         // send message.
         throw new UnsupportedOperationException("Unimplemented method 'process'");

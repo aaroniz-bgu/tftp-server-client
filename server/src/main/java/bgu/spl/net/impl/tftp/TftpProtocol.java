@@ -21,8 +21,6 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
     public boolean shouldTerminate() {
         // TODO implement this
         throw new UnsupportedOperationException("Unimplemented method 'shouldTerminate'");
-    } 
-
-
+    }
     
 }

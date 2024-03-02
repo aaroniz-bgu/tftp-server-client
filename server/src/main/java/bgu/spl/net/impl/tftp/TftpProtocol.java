@@ -15,7 +15,7 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
     private Connections<byte[]> connections;
 
     private boolean terminate = false;
-    private boolean isLogged = false;
+    private boolean isLogged  = false;
 
     @Override
     public void start(int connectionId, Connections<byte[]> connections) {
@@ -45,30 +45,36 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             return;
         }
 
+        // Check whether the request is to disconnect.
+        if(op == Operation.DISC) {
+            disconnect();
+        }
+
         // Call the API and get response:
         AbstractPacket controllerResponse = mapMessageToApi(controller, op, message);
 
         // Handle response:
         if(controllerResponse != null) {
+            // Check if file was added:
             AbstractPacket broadcast = controllerResponse.getBroadcastPacket();
             if(broadcast != null) {
                 byte[] broadcastBytes = broadcast.getBytes();
                 connections.broadcast(broadcastBytes);
             }
+
+            // Respond to the user.
             connections.send(connectionId, controllerResponse.getBytes());
         }
-
-        if(op == Operation.DISC) {
-            disconnect();
-        }
-        // send message.
-        throw new UnsupportedOperationException("Unimplemented method 'process'");
     }
 
+    /**
+     * Disconnects the connection.
+     */
     private void disconnect() {
         try {
             connections.disconnect(connectionId);
             terminate = true;
+            isLogged  = false;
             //create AcknowledgementPacket and send it.
         } catch (RuntimeException e) {
             //create an ErrorPacket and send it
@@ -111,15 +117,8 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
                 return null;
             case DIRQ:
                 return controller.listDirectoryRequest();
-            /*
-            Unnecessary, now using TftpProtocol.login() for this.
-            case LOGRQ:
-                return controller.logRequest(request);
-            */
             case DELRQ:
                 return controller.deleteRequest(request);
-            case DISC:
-                return controller.disconnectRequest();
             default:
                 // TODO Replace with ErrorPacket
                 throw new UnsupportedOperationException("Unsupported request operation code: " + opCode);

@@ -9,6 +9,7 @@ import java.util.Arrays;
  *
  */
 public class DataPacket extends AbstractPacket {
+    //TODO USE Operation:
     private static final short OP_CODE = 3;
     public final short packetSize;
     public final short blockNumber;

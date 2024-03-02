@@ -18,7 +18,7 @@ public class TftpConnections implements Connections<byte[]> {
     }
 
     @Override
-    public void connect(int connectionId, ConnectionHandler<byte[]> handler) {
+    public synchronized void connect(int connectionId, ConnectionHandler<byte[]> handler) {
         if(connections.containsKey(connectionId)) {
             throw new KeyAlreadyExistsException("Connection ID " + connectionId + " is already in use.");
         }
@@ -38,7 +38,7 @@ public class TftpConnections implements Connections<byte[]> {
     }
 
     @Override
-    public void disconnect(int connectionId) {
+    public synchronized void disconnect(int connectionId) {
         try {
             connections.get(connectionId).close();
             connections.remove(connectionId);

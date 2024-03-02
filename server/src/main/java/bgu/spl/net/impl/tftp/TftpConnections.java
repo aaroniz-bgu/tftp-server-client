@@ -13,10 +13,10 @@ import java.util.NoSuchElementException;
 
 public class TftpConnections implements Connections<byte[]> {
     private final Map<Integer, ConnectionHandler<byte[]>> connections;
-    private final ArrayList<Integer> listeners;
+    private final Map<Integer, String> listeners;
     public TftpConnections() {
         connections = new HashMap<>();
-        listeners = new ArrayList<>();
+        listeners = new HashMap<>();
     }
 
     @Override
@@ -44,24 +44,29 @@ public class TftpConnections implements Connections<byte[]> {
         try {
             connections.get(connectionId).close();
             connections.remove(connectionId);
-            listeners.remove(Integer.valueOf(connectionId));
+            listeners.remove(connectionId);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public synchronized void subscribe(int connectionId) {
+    public synchronized void subscribe(int connectionId, String username) throws SecurityException {
         if(!connections.containsKey(connectionId)) {
             throw new NoSuchElementException("No connection exists with ID: " + connectionId);
         }
-        listeners.add(connectionId);
+        for(Map.Entry<Integer, String> listener : listeners.entrySet()) {
+            if(username.equals(listener.getValue())) {
+                throw new SecurityException("User already connected to the server from another place.");
+            }
+        }
+        listeners.put(connectionId, username);
     }
 
     @Override
     public synchronized void broadcast(byte[] broadcastMessage) {
-        for(int listenerId : listeners) {
-            connections.get(listenerId).send(broadcastMessage);
+        for(Map.Entry<Integer, String> listener : listeners.entrySet()) {
+            connections.get(listener.getKey()).send(broadcastMessage);
         }
     }
 }

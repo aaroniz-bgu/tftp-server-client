@@ -27,7 +27,7 @@ public class TftpConnections implements Connections<byte[]> {
     }
 
     @Override
-    public boolean send(int connectionId, byte[] msg) {
+    public synchronized boolean send(int connectionId, byte[] msg) {
         ConnectionHandler<byte[]> connection = connections.get(connectionId);
         if(connection == null) {
             throw new NoSuchElementException("No connection with the ID " + connectionId + " exists");

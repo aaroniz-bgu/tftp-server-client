@@ -49,8 +49,9 @@ public class TftpApi {
     /**
      * Writes a file to the server, accepting data.
      * @param request User's request.
+     * @return an ErrorPacket if something went wrong (consider return something if succeeds).
      */
-    public void writeData(byte[] request) {
+    public AbstractPacket writeData(byte[] request) {
         throw new UnsupportedOperationException("Yet to be implemented");
     }
 

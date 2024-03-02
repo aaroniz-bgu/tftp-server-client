@@ -22,5 +22,5 @@ public interface Connections<T> {
      * Usually called notify(), to broadcast messages easier.
      * @param broadcastMessage Message to send.
      */
-    void broadcast(T broadcastMessage);
+    void broadcast(T broadcastMessage); // TODO MAYBE ADD CONNECTION HANDLER TO NOT BROADCAST TO SELF
 }

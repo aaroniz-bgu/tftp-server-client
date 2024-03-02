@@ -5,9 +5,21 @@ import bgu.spl.net.impl.tftp.GlobalConstants;
 import java.util.Collection;
 
 public abstract class AbstractPacket {
+    /**
+     * The opcode of the packet.
+     * @see bgu.spl.net.impl.tftp.Operation
+     */
     public final short opCode;
+    /**
+     * If not null, the packet will be broadcast to all the connections.
+     */
     public BroadcastPacket broadcast;
 
+    /**
+     * Default Constructor for creating a packet. All packets must have an opcode.
+     * broadcast is set to null by default. If needed, it can be set using {@link #setBroadcastPacket(BroadcastPacket)}.
+     * @param opCode the opcode of the packet.
+     */
     public AbstractPacket(short opCode) {
         this.opCode = opCode;
         this.broadcast = null;

@@ -16,7 +16,7 @@ public interface Connections<T> {
      * Subscribes to the listeners.
      * @param connectionId The connection id to be subscribed.
      */
-    void subscribe(int connectionId);
+    void subscribe(int connectionId, String username) throws SecurityException; // this might be the wrong type of ex.
 
     /**
      * Usually called notify(), to broadcast messages easier.

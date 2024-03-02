@@ -52,6 +52,15 @@ public abstract class AbstractPacket {
     }
 
     /**
+     * Get the opcode of the packet.
+     * @return the opcode of the packet.
+     * @see bgu.spl.net.impl.tftp.Operation
+     */
+    public short getOpCode() {
+        return opCode;
+    }
+
+    /**
      * Utility function that concats arrays together.
      * @param arrays Collection of byte arrays to combine.
      * @param terminate Determines whether the packet should be terminated by the defined terminator or not.

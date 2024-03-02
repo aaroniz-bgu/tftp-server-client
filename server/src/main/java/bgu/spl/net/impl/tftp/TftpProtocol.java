@@ -5,8 +5,6 @@ import bgu.spl.net.impl.tftp.controllers.TftpApi;
 import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 import bgu.spl.net.srv.Connections;
 
-import java.io.IOException;
-
 public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 
     private TftpApi controller;

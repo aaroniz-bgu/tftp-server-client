@@ -17,6 +17,11 @@ public abstract class AbstractPacket {
     abstract public byte[] getBytes();
 
     /**
+     * @return BroadcastPacket if this operation should broadcast itself to all the connections.
+     */
+    abstract public AbstractPacket getBroadcastPacket();
+
+    /**
      * Utility function that concats arrays together.
      * @param arrays Collection of byte arrays to combine.
      * @param terminate Determines whether the packet should be terminated by the defined terminator or not.

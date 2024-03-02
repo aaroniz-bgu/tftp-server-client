@@ -41,12 +41,13 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
         if(!isLogged) {
             if(op == Operation.LOGRQ) {
                 login("TODO"); // TODO Retrieve username from message.
+            } else {
+                connections.send(connectionId, null
+                        /*TODO new ErrorPacket("Unauthenticated user cannot perform actions, please login");*/);
             }
             return;
-        }
-
-        // Check whether the request is to disconnect.
-        if(op == Operation.DISC) {
+            // Check whether the request is to disconnect.
+        } else if(op == Operation.DISC) {
             disconnect();
         }
 
@@ -75,9 +76,9 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             connections.disconnect(connectionId);
             terminate = true;
             isLogged  = false;
-            //create AcknowledgementPacket and send it.
+            // TODO create AcknowledgementPacket and send it.
         } catch (RuntimeException e) {
-            //create an ErrorPacket and send it
+            // TODO create an ErrorPacket and send it
         }
     }
 
@@ -113,8 +114,7 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             case WRQ:
                 return controller.writeRequest(request);
             case DATA:
-                controller.writeData(request);
-                return null;
+                return controller.writeData(request);
             case DIRQ:
                 return controller.listDirectoryRequest();
             case DELRQ:

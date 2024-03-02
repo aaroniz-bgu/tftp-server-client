@@ -1,10 +1,11 @@
 package bgu.spl.net.impl.tftp;
 
+import bgu.spl.net.srv.BlockingConnectionHandler;
 import bgu.spl.net.srv.ConnectionHandler;
 import bgu.spl.net.srv.Connections;
 
 import javax.management.openmbean.KeyAlreadyExistsException;
-import java.nio.channels.AlreadyConnectedException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -38,6 +39,11 @@ public class TftpConnections implements Connections<byte[]> {
 
     @Override
     public void disconnect(int connectionId) {
-        connections.remove(connectionId);
+        try {
+            connections.get(connectionId).close();
+            connections.remove(connectionId);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

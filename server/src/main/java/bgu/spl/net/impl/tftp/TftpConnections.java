@@ -5,15 +5,18 @@ import bgu.spl.net.srv.Connections;
 
 import javax.management.openmbean.KeyAlreadyExistsException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+
 public class TftpConnections implements Connections<byte[]> {
     private final Map<Integer, ConnectionHandler<byte[]>> connections;
-
+    private final ArrayList<Integer> listeners;
     public TftpConnections() {
         connections = new HashMap<>();
+        listeners = new ArrayList<>();
     }
 
     @Override
@@ -41,8 +44,24 @@ public class TftpConnections implements Connections<byte[]> {
         try {
             connections.get(connectionId).close();
             connections.remove(connectionId);
+            listeners.remove(Integer.valueOf(connectionId));
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public synchronized void subscribe(int connectionId) {
+        if(!connections.containsKey(connectionId)) {
+            throw new NoSuchElementException("No connection exists with ID: " + connectionId);
+        }
+        listeners.add(connectionId);
+    }
+
+    @Override
+    public synchronized void broadcast(byte[] broadcastMessage) {
+        for(int listenerId : listeners) {
+            connections.get(listenerId).send(broadcastMessage);
         }
     }
 }

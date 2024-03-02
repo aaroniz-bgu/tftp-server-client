@@ -25,7 +25,7 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
     }
 
     @Override
-    public void process(byte[] message) {
+    public void process(byte[] message) { // TODO Subscribe to broadcast once logged.
         if(message.length < 2) {
             throw new RuntimeException("Message received without operation code");
         }

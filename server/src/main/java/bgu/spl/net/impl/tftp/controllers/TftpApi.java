@@ -3,12 +3,10 @@ package bgu.spl.net.impl.tftp.controllers;
 import bgu.spl.net.impl.tftp.TftpConnections;
 import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 
-import java.sql.Connection;
-
 /**
  * Serializes data from the server and deserializes data from client.
  */
-public class TftpAPI {
+public class TftpApi {
 
     private int connectionId;
     private TftpConnections connections;
@@ -19,7 +17,7 @@ public class TftpAPI {
      * @param connectionId
      * @param connections
      */
-    public TftpAPI(int connectionId, TftpConnections connections/*, TftpServices service*/) {
+    public TftpApi(int connectionId, TftpConnections connections/*, TftpServices service*/) {
         this.connectionId = connectionId;
         this.connections  = connections;
     }

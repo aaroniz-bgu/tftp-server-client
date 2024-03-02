@@ -9,15 +9,6 @@ import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 public class TftpApi {
 
     /**
-     * Logins a new user whether it's not logged in yet.
-     * @param request User's request.
-     * @return AcknowledgementPacket(block=0) if successful and ErrorPacket otherwise.
-     */
-    public AbstractPacket logRequest(byte[] request) {
-        throw new UnsupportedOperationException("Yet to be implemented");
-    }
-
-    /**
      * Deletes a file from the server.
      * @param request User's request.
      * @return AcknowledgementPacket(block=0) if successful and ErrorPacket otherwise.
@@ -61,14 +52,6 @@ public class TftpApi {
      */
     public AbstractPacket listDirectoryRequest() {
         throw new UnsupportedOperationException("Yet to be implemented");
-    }
-
-    /**
-     * Disconnects user from the server.
-     * @return AcknowledgementPacket or ErrorPacket.
-     */
-    public AbstractPacket disconnectRequest() {
-        throw new UnsupportedOperationException("");
     }
 
 }

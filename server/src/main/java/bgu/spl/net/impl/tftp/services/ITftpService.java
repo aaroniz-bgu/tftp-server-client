@@ -46,22 +46,12 @@ public interface ITftpService {
     /**
      * Data to write to file
      * Make sure to broadcast to all users the file was added after the complete write was successful.
-     * If the write was incomplete, the file should be deleted without broadcasting to all the users using
-     * {@link #deleteFileQuietly(String)}.
+     * If the write was incomplete, the file should be deleted without broadcasting to all the users.
      * @param data data to write
      * @param fileName file to write to
      * @exception Exception if some sort of error occurred while writing the data. Otherwise, assume write was successful.
      */
     public void writeData(byte[] data, String fileName) throws Exception;
-
-    /**
-     * To be used in case an error occurred while writing the data.
-     * The file should be deleted without broadcasting to all the users.
-     * @param filename file to delete
-     * @exception IllegalArgumentException if the file does not exist.
-     * @exception Exception if some sort of error occurred while deleting the file.
-     */
-    public void deleteFileQuietly(String filename) throws IllegalArgumentException, Exception;
 
     /**
      * Request to list all the files in the server

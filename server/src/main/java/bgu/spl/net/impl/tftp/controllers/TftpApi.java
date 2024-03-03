@@ -11,7 +11,8 @@ public class TftpApi {
     /**
      * Deletes a file from the server.
      * @param request User's request.
-     * @return AcknowledgementPacket(block=0) if successful and ErrorPacket otherwise.
+     * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket}(block=0) if successful
+     * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise.
      */
     public AbstractPacket deleteRequest(byte[] request) {
         // TODO remember in the service check for dumb trials of user to get out of the folder.
@@ -22,7 +23,8 @@ public class TftpApi {
     /**
      * Download a file from the server.
      * @param request User's request.
-     * @return DataPacket-s containing file data or ErrorPacket.
+     * @return {@link bgu.spl.net.impl.tftp.packets.DataPacket}'s containing file data or
+     * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket}.
      */
     public AbstractPacket readRequest(byte[] request) {
         throw new UnsupportedOperationException("Yet to be implemented");
@@ -31,7 +33,8 @@ public class TftpApi {
     /**
      * Upload file request, just a request to upload file not the writing yet.
      * @param request User's request.
-     * @return AcknowledgementPacket if possible to upload and ErrorPacket otherwise.
+     * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} if possible to upload
+     * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise.
      */
     public AbstractPacket writeRequest(byte[] request) {
         throw new UnsupportedOperationException("Yet to be implemented");
@@ -40,7 +43,7 @@ public class TftpApi {
     /**
      * Writes a file to the server, accepting data.
      * @param request User's request.
-     * @return returns AcknowledgementPacket(+block) if succeeded saving and ErrorPacket if something went wrong.
+     * @return returns AcknowledgementPacket(+block) if succeeded saving and @link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong.
      */
     public AbstractPacket writeData(byte[] request) {
         throw new UnsupportedOperationException("Yet to be implemented");
@@ -48,10 +51,11 @@ public class TftpApi {
 
     /**
      * Lists files in the server's directory.
-     * @return DataPacket containing the server's files and ErrorPacket if something went wrong.
+     * @return {@link bgu.spl.net.impl.tftp.packets.DataPacket} containing the server's files and
+     * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong.
      */
     public AbstractPacket listDirectoryRequest() {
         throw new UnsupportedOperationException("Yet to be implemented");
     }
-
+  
 }

@@ -25,7 +25,7 @@ public class TftpService implements ITftpService {
     }
 
     @Override
-    public byte[] directoryRequest() throws Exception {
-        return new byte[0];
+    public String directoryRequest() throws Exception {
+        return null;
     }
 }

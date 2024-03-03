@@ -9,16 +9,6 @@ import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 public class TftpApi {
 
     /**
-     * Logins a new user whether it's not logged in yet.
-     * @param request User's request.
-     * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket}(block=0) if successful
-     * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise.
-     */
-    public AbstractPacket logRequest(byte[] request) {
-        throw new UnsupportedOperationException("Yet to be implemented");
-    }
-
-    /**
      * Deletes a file from the server.
      * @param request User's request.
      * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket}(block=0) if successful
@@ -53,8 +43,7 @@ public class TftpApi {
     /**
      * Writes a file to the server, accepting data.
      * @param request User's request.
-     * @return an {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong
-     * (consider return something if succeeds).
+     * @return returns AcknowledgementPacket(+block) if succeeded saving and @link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong.
      */
     public AbstractPacket writeData(byte[] request) {
         throw new UnsupportedOperationException("Yet to be implemented");
@@ -68,13 +57,5 @@ public class TftpApi {
     public AbstractPacket listDirectoryRequest() {
         throw new UnsupportedOperationException("Yet to be implemented");
     }
-
-    /**
-     * Disconnects user from the server.
-     * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} or ErrorPacket.
-     */
-    public AbstractPacket disconnectRequest() {
-        throw new UnsupportedOperationException("");
-    }
-
+  
 }

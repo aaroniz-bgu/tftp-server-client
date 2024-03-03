@@ -20,4 +20,9 @@ public class GlobalConstants {
      * Termination character for non-constant length packets.
      */
     public static final byte TERMINATOR = 0;
+
+    /**
+     * Default acknowledgement block code.
+     */
+    public static final short DEFAULT_ACK = 0;
 }

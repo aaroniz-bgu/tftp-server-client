@@ -12,11 +12,8 @@ import java.util.function.Supplier;
  * This server handles messages by serializing packets into byte streams.
  */
 public class TftpServer extends BaseServer<byte[]> {
-    public TftpServer(
-            int port,
-            Supplier<MessagingProtocol<byte[]>> protocolFactory,
-            Supplier<MessageEncoderDecoder<byte[]>> encdecFactory) {
-        super(port, protocolFactory, encdecFactory);
+    public TftpServer(int port) {
+        super(port, TftpProtocol::new, TftpEncoderDecoder::new);
     }
 
     /**

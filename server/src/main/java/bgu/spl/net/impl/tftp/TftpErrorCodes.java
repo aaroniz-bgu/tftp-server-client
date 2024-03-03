@@ -1,4 +1,4 @@
-package bgu.spl.net.impl.tftp.services;
+package bgu.spl.net.impl.tftp;
 
 public enum TftpErrorCodes {
     NOT_DEF((short) 0), FILE_NOT_FOUND((short) 1),

@@ -6,7 +6,6 @@ public class TftpService implements ITftpService {
 
     @Override
     public void deleteFile(String filename) {
-        return null;
     }
 
     @Override
@@ -16,7 +15,7 @@ public class TftpService implements ITftpService {
 
     @Override
     public boolean writeRequest(String filename) {
-        return null;
+        return false;
     }
 
     @Override

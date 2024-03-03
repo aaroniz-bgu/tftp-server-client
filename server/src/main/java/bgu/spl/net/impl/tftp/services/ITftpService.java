@@ -13,17 +13,6 @@ import bgu.spl.net.impl.tftp.packets.LoginRequestPacket;
 public interface ITftpService {
 
     /**
-     * User requesting to log in with specified username.
-     * If the username is already logged in, the user will be rejected. (error code 7)
-     * Otherwise, the user will be logged in.
-     * @apiNote The usernames are case-sensitive.
-     * @param username username user is trying to log in with.
-     * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} with block number 0 if successful
-     * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise. (with the correct error code and message)
-     */
-    public AbstractPacket login(String username);
-
-    /**
      * Request to delete file from server
      * If the file does not exist, the user will be rejected. (error code 1)
      * Otherwise, the file will be deleted and all the users currently logged in should be notified with a
@@ -80,11 +69,4 @@ public interface ITftpService {
      * @exception Exception if some sort of error occurred while listing the files.
      */
     public byte[] directoryRequest() throws Exception;
-
-    /**
-     * Request to disconnect from the server
-     * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} if successful
-     * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise. (with the correct error code and message)
-     */
-    public AbstractPacket disconnect();
 }

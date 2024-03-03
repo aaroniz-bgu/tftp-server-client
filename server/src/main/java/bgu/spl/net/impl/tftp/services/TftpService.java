@@ -9,6 +9,8 @@ import static bgu.spl.net.impl.tftp.services.ServicesConstants.WORK_DIR;
 
 public class TftpService implements ITftpService {
 
+    private String currentFileName;
+
     /**
      * Checks whether the user is trying any funny business.
      * @param filename The file's name.
@@ -33,10 +35,14 @@ public class TftpService implements ITftpService {
         if(isIllegalFileName(filename)) {
             throw new IllegalArgumentException("Illegal file name!");
         }
-        ConcurrencyHelper.getInstance().delete(filename);
-        if(!new File(WORK_DIR + filename).delete()) {
-            throw new RuntimeException("Failed to delete file.");
-        } else {
+        try {
+            ConcurrencyHelper.getInstance().delete(filename);
+            if (!new File(WORK_DIR + filename).delete()) {
+                throw new RuntimeException("Failed to delete file.");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
             ConcurrencyHelper.getInstance().deletionCompleted(filename);
         }
     }

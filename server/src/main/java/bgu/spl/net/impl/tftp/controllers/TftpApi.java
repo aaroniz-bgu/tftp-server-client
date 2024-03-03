@@ -10,6 +10,7 @@ public class TftpApi {
 
     /**
      * Deletes a file from the server.
+     * Then sends to all users that are logged in a broadcast packet that the file was deleted.
      * @param request User's request.
      * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket}(block=0) if successful
      * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise.

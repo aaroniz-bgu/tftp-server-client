@@ -3,6 +3,8 @@ package bgu.spl.net.impl.tftp.services;
 import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 import bgu.spl.net.impl.tftp.packets.LoginRequestPacket;
 
+import java.util.ConcurrentModificationException;
+
 /**
  * This interface represents the TFTP service.
  * The TFTP service is used to handle all the requests from the client after the request has been decoded.
@@ -23,7 +25,7 @@ public interface ITftpService {
      * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} if successful
      * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise. (with the correct error code and message)
      */
-    public AbstractPacket deleteFile(String filename);
+    public void deleteFile(String filename) throws ConcurrentModificationException;
 
     /**
      * Request to read file from server
@@ -40,7 +42,7 @@ public interface ITftpService {
      * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} if file doesn't exist and user can write to it.
      * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise. (with the correct error code and message)
      */
-    public AbstractPacket writeRequest(String filename);
+    public boolean writeRequest(String filename);
 
     //TODO update exception type if needed
     /**

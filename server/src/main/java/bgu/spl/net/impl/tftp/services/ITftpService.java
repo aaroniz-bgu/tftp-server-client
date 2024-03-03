@@ -3,6 +3,8 @@ package bgu.spl.net.impl.tftp.services;
 import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 import bgu.spl.net.impl.tftp.packets.LoginRequestPacket;
 
+import java.util.ConcurrentModificationException;
+
 /**
  * This interface represents the TFTP service.
  * The TFTP service is used to handle all the requests from the client after the request has been decoded.
@@ -20,10 +22,8 @@ public interface ITftpService {
      * The {@link bgu.spl.net.impl.tftp.packets.BroadcastPacket} should contain the file name and whether it was added or deleted.
      * And will be contained in the {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} as an attached broadcast packet.
      * @param filename file to delete
-     * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} if successful
-     * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise. (with the correct error code and message)
      */
-    public AbstractPacket deleteFile(String filename);
+    public void deleteFile(String filename) throws ConcurrentModificationException;
 
     /**
      * Request to read file from server
@@ -40,14 +40,14 @@ public interface ITftpService {
      * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} if file doesn't exist and user can write to it.
      * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise. (with the correct error code and message)
      */
-    public AbstractPacket writeRequest(String filename);
+    public boolean writeRequest(String filename);
 
     //TODO update exception type if needed
     /**
      * Data to write to file
      * Make sure to broadcast to all users the file was added after the complete write was successful.
      * Assumes the service already knows which user is writing the file and the file name.
-     * If the write was incomplete, the file should be deleted without broadcasting to all the users.
+     * If to write was incomplete, the file should be deleted without broadcasting to all the users.
      * @param data data to write
      * @return the block number of the data that was written.
      * @exception Exception if some sort of error occurred while writing the data. Otherwise, assume write was successful.

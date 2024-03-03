@@ -4,8 +4,7 @@ import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 
 public class TftpService implements ITftpService {
     @Override
-    public AbstractPacket deleteFile(String filename) {
-        return null;
+    public void deleteFile(String filename) {
     }
 
     @Override
@@ -14,8 +13,8 @@ public class TftpService implements ITftpService {
     }
 
     @Override
-    public AbstractPacket writeRequest(String filename) {
-        return null;
+    public boolean writeRequest(String filename) {
+        return false;
     }
 
     @Override

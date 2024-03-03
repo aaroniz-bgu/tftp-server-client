@@ -56,8 +56,8 @@ public interface ITftpService {
 
     /**
      * Request to list all the files in the server
-     * @return byte array of all the files in the server
+     * @return All the files in the server
      * @exception Exception if some sort of error occurred while listing the files.
      */
-    public byte[] directoryRequest() throws Exception;
+    public String directoryRequest() throws Exception;
 }

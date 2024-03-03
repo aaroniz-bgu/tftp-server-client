@@ -3,9 +3,15 @@ package bgu.spl.net.impl.tftp;
 import bgu.spl.net.api.BidiMessagingProtocol;
 import bgu.spl.net.impl.tftp.controllers.TftpApi;
 import bgu.spl.net.impl.tftp.packets.AbstractPacket;
+import bgu.spl.net.impl.tftp.packets.AcknowledgementPacket;
+import bgu.spl.net.impl.tftp.packets.ErrorPacket;
+import bgu.spl.net.impl.tftp.packets.LoginRequestPacket;
 import bgu.spl.net.srv.Connections;
 
 import java.util.NoSuchElementException;
+
+import static bgu.spl.net.impl.tftp.GlobalConstants.DEFAULT_ACK;
+import static bgu.spl.net.impl.tftp.services.TftpErrorCodes.*;
 
 public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 
@@ -28,22 +34,24 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
     }
 
     @Override
-    public void process(byte[] message) { // TODO Subscribe to broadcast once logged.
+    public void process(byte[] message) {
         if(message.length < 2) {
             throw new RuntimeException("Message received without operation code");
         }
 
         // Retrieve op code:
         short opCode = EncodeDecodeHelper.byteToShort(new byte[]{message[0], message[1]});
-        Operation op = Operation.OPS[opCode];
+        Operation op = Operation.OPS[opCode]; // todo if out of bounds send illegal op.
 
         // Check if we're logged before giving any service:
         if(!isLogged) {
             if(op == Operation.LOGRQ) {
-                login("TODO"); // TODO Retrieve username from message.
+                String username = new LoginRequestPacket(message).getUserName();
+                login(username);
             } else {
-                connections.send(connectionId, null
-                        /*TODO new ErrorPacket("Unauthenticated user cannot perform actions, please login");*/);
+                connections.send(connectionId, new ErrorPacket(USER_NOT_LOGGED.ERROR_CODE,
+                                "Unauthenticated user cannot perform actions, please login")
+                                .getBytes());
             }
             return;
             // Check whether the request is to disconnect.
@@ -65,6 +73,10 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 
             // Respond to the user.
             connections.send(connectionId, controllerResponse.getBytes());
+        } else {
+            connections.send(connectionId, new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE,
+                    "Operation " + opCode + " isn't supported.")
+                    .getBytes());
         }
     }
 
@@ -76,9 +88,9 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             connections.disconnect(connectionId);
             terminate = true;
             isLogged  = false;
-            // TODO create AcknowledgementPacket and send it.
+            connections.send(connectionId, new AcknowledgementPacket(DEFAULT_ACK).getBytes());
         } catch (RuntimeException e) {
-            // TODO create an ErrorPacket and send it
+            connections.send(connectionId, new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage()).getBytes());
         }
     }
 
@@ -89,11 +101,11 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
     private void login(String username) {
         try {
             connections.subscribe(connectionId, username);
-            connections.send(connectionId, null /*TODO new AcknowledgementPacket(0).getBytes()*/);
+            connections.send(connectionId, new AcknowledgementPacket(DEFAULT_ACK).getBytes());
             isLogged = true;
         } catch (SecurityException e) {
             //we need a logger.
-            connections.send(connectionId, null /*TODO new ErrorPacket(e.getMessage()).getBytes()*/);
+            connections.send(connectionId, new ErrorPacket(USER_ALREADY_LOGGED.ERROR_CODE, e.getMessage()).getBytes());
             isLogged = false;
         } catch (NoSuchElementException e) {
             //log that this connection doesn't exist.
@@ -120,8 +132,7 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             case DELRQ:
                 return controller.deleteRequest(request);
             default:
-                // TODO Replace with ErrorPacket
-                throw new UnsupportedOperationException("Unsupported request operation code: " + opCode);
+                return null;
         }
     }
 

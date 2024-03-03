@@ -14,7 +14,7 @@ public class ConcurrencyHelper {
      * <a href="https://stackoverflow.com/a/55031179/19275130">this.</a>
      */
     private static class ConcurrencyHelperHolder {
-        private static ConcurrencyHelper instance = new ConcurrencyHelper();
+        private static final ConcurrencyHelper instance = new ConcurrencyHelper();
     }
 
     /**

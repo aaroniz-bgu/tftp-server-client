@@ -47,7 +47,7 @@ public class TftpService implements ITftpService {
         if(isIllegalFileName(filename)) {
             throw new IllegalArgumentException("Illegal file name!");
         }
-
+        // I think this should have some kind of access to the send function.
         return new byte[0];
     }
 

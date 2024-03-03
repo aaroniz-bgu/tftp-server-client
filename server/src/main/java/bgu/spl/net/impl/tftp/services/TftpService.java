@@ -41,7 +41,6 @@ public class TftpService implements ITftpService {
         }
     }
 
-
     @Override
     public byte[] readRequest(String filename) throws IllegalArgumentException {
         if(isIllegalFileName(filename)) {

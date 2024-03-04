@@ -70,6 +70,7 @@ public class TftpService implements ITftpService {
 
             byte[] output = new byte[MAX_DATA_PACKET_SIZE];
             int read = stream.read(output);
+            stream.close();
 
             if(read == -1) {
                 return new byte[0];

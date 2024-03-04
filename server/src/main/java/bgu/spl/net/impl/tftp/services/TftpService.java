@@ -155,8 +155,14 @@ public class TftpService implements ITftpService {
     }
 
     @Override
-    public short writeData(byte[] data) throws Exception {
-        return 0;
+    public void writeData(byte[] data) throws Exception {
+        if(currentFileName == null) {
+            throw new IllegalStateException("No file is being read currently.");
+        }
+        File file = new File(WORK_DIR + currentFileName);
+        OutputStream stream = new FileOutputStream(file, true);
+        stream.write(data);
+        stream.close();
     }
 
     @Override

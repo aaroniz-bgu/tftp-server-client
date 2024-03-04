@@ -26,13 +26,22 @@ public interface ITftpService {
     public void deleteFile(String filename) throws Exception;
 
     /**
+     * Used in the first time we want to read a file.
      * Request to read file from server
      * @param filename The file's name in the server's working directory.
+     * @return byte array of the file
+     * @throws Exception depends on the implementation, but there will be exceptions.
+     */
+    public byte[] readFile(String filename) throws Exception;
+
+    /**
+     * Used for continuous reading of a file.
+     * Request to read file from server
      * @param block The current block of file being read.
      * @return byte array of the file
-     * @throws IllegalArgumentException if the file does not exist.
+     * @throws Exception depends on the implementation, but there will be exceptions.
      */
-    public byte[] readRequest(String filename, short block) throws Exception;
+    public byte[] readFile(short block) throws Exception;
 
     /**
      * Request to write file to server

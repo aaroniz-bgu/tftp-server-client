@@ -184,7 +184,8 @@ public class TftpService implements ITftpService {
             throw new IllegalStateException("No file is being written currently.");
         }
         File file = new File(WORK_DIR + currentFileName);
-        try (OutputStream stream = new FileOutputStream(file, true)) {
+        OutputStream stream = new FileOutputStream(file, true);
+        try {
             stream.write(data);
             // Check if this is the last block of the file
             if (data.length < MAX_DATA_PACKET_SIZE) {
@@ -192,10 +193,12 @@ public class TftpService implements ITftpService {
                 ConcurrencyHelper.getInstance().writeCompleted(currentFileName);
                 currentFileName = null; // Reset currentFileName as the write operation is completed
             }
+            stream.close();
         } catch (IOException e) {
             // Handle IOException
             ConcurrencyHelper.getInstance().writeCompleted(currentFileName);
             currentFileName = null;
+            stream.close();
             throw e;
         }
     }

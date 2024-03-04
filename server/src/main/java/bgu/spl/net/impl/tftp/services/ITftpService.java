@@ -23,15 +23,16 @@ public interface ITftpService {
      * And will be contained in the {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} as an attached broadcast packet.
      * @param filename file to delete
      */
-    public void deleteFile(String filename) throws ConcurrentModificationException;
+    public void deleteFile(String filename) throws Exception;
 
     /**
      * Request to read file from server
-     * @param filename
+     * @param filename The file's name in the server's working directory.
+     * @param block The current block of file being read.
      * @return byte array of the file
      * @throws IllegalArgumentException if the file does not exist.
      */
-    public byte[] readRequest(String filename) throws IllegalArgumentException;
+    public byte[] readRequest(String filename, short block) throws Exception;
 
     /**
      * Request to write file to server
@@ -40,7 +41,7 @@ public interface ITftpService {
      * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} if file doesn't exist and user can write to it.
      * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise. (with the correct error code and message)
      */
-    public boolean writeRequest(String filename);
+    public boolean writeRequest(String filename) throws Exception;
 
     //TODO update exception type if needed
     /**

@@ -31,7 +31,6 @@ public abstract class BaseServer<T> implements Server<T> {
         this.idCounter = 1;
     }
 
-
     public BaseServer(int port,
                       Supplier<BidiMessagingProtocol<T>> protocolFactory,
                       Supplier<MessageEncoderDecoder<T>> encdecFactory) {

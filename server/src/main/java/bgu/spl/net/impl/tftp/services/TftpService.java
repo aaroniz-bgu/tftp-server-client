@@ -2,9 +2,10 @@ package bgu.spl.net.impl.tftp.services;
 
 import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 
-import java.io.File;
+import java.io.*;
 import java.util.ConcurrentModificationException;
 
+import static bgu.spl.net.impl.tftp.GlobalConstants.MAX_DATA_PACKET_SIZE;
 import static bgu.spl.net.impl.tftp.services.ServicesConstants.WORK_DIR;
 
 public class TftpService implements ITftpService {
@@ -28,10 +29,7 @@ public class TftpService implements ITftpService {
      * @throws RuntimeException If the file deletion was not successful.
      */
     @Override
-    public void deleteFile(String filename) throws
-            ConcurrentModificationException,
-            IllegalArgumentException,
-            RuntimeException {
+    public void deleteFile(String filename) throws Exception {
         if(isIllegalFileName(filename)) {
             throw new IllegalArgumentException("Illegal file name!");
         }
@@ -47,13 +45,52 @@ public class TftpService implements ITftpService {
         }
     }
 
+    /**
+     * Reads a file block and returns it, might return an array smaller than a block size or equals to 0.
+     * @param filename The file's name in the server's working directory.
+     * @param block The current block of file being read.
+     * @return A byte array containing the file's contents in the specified block. Might return a smaller
+     * array then data-packet size if the block is the last of the file, if no bytes we're read due to the
+     * request of a block which isn't found in the file or if there was an undetected IO error within the OS.
+     * @throws ConcurrentModificationException If the file is currently being deleted.
+     * @throws FileNotFoundException If the OS could not locate the file.
+     * @throws IOException If there was some kind of IO faulty while reading the file.
+     */
     @Override
-    public byte[] readRequest(String filename) throws IllegalArgumentException {
+    public byte[] readRequest(String filename, short block) throws Exception {
         if(isIllegalFileName(filename)) {
             throw new IllegalArgumentException("Illegal file name!");
         }
-        // I think this should have some kind of access to the send function.
-        return new byte[0];
+        try {
+            ConcurrencyHelper.getInstance().read(filename);
+
+            InputStream stream = new FileInputStream(new File(WORK_DIR + filename));
+            long skipBytes = block * MAX_DATA_PACKET_SIZE;
+            stream.skip(skipBytes);
+
+            byte[] output = new byte[MAX_DATA_PACKET_SIZE];
+            int read = stream.read(output);
+            
+            if(read == -1) {
+                return new byte[0];
+            } else if (read < MAX_DATA_PACKET_SIZE) {
+                ConcurrencyHelper.getInstance().free(filename);
+                byte[] trimmed = new byte[read];
+                System.arraycopy(output, 0, trimmed, 0, read);
+                return trimmed;
+            }
+            return output;
+            // We're not calling free in finally because the file may be still in reading progress.
+        } catch (ConcurrentModificationException e) {
+            ConcurrencyHelper.getInstance().free(filename);
+            throw new RuntimeException(e);
+        } catch (FileNotFoundException e) {
+            ConcurrencyHelper.getInstance().free(filename);
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            ConcurrencyHelper.getInstance().free(filename);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

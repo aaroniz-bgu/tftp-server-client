@@ -3,11 +3,11 @@ package bgu.spl.net.impl.tftp.controllers;
 import bgu.spl.net.impl.tftp.packets.*;
 import bgu.spl.net.impl.tftp.services.ITftpService;
 
+import java.io.FileNotFoundException;
 import java.util.ConcurrentModificationException;
 
 import static bgu.spl.net.impl.tftp.GlobalConstants.DEFAULT_ACK;
-import static bgu.spl.net.impl.tftp.TftpErrorCodes.ACCESS_VIOLATION;
-import static bgu.spl.net.impl.tftp.TftpErrorCodes.NOT_DEF;
+import static bgu.spl.net.impl.tftp.TftpErrorCodes.*;
 
 /**
  * Serializes data from the server and deserializes data from client.
@@ -48,7 +48,37 @@ public class TftpApi {
      * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket}.
      */
     public AbstractPacket readRequest(byte[] request) {
-        throw new UnsupportedOperationException("Yet to be implemented");
+        try {
+            ReadRequestPacket requestPacket = new ReadRequestPacket(request);
+            byte[] firstBlock = service.readFile(requestPacket.getFileName());
+            return new DataPacket((short) firstBlock.length, (short) 0, firstBlock);
+        } catch (FileNotFoundException e) {
+            return new ErrorPacket(FILE_NOT_FOUND.ERROR_CODE, e.getMessage());
+        } catch (IllegalArgumentException | ConcurrentModificationException e) {
+            return new ErrorPacket(ACCESS_VIOLATION.ERROR_CODE, e.getMessage());
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
+    }
+
+    /**
+     * Used to support continuous reading of a file.
+     * @param request User's request.
+     * @return {@link bgu.spl.net.impl.tftp.packets.DataPacket}'s containing file data or
+     * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket}.
+     */
+    public AbstractPacket readRequestContinue(byte[] request) {
+        try {
+            AcknowledgementPacket requestPacket = new AcknowledgementPacket(request);
+            byte[] nextBlock = service.readFile((short) (requestPacket.getBlockNumber() + 1));
+            return new DataPacket((short) nextBlock.length, (short) (requestPacket.getBlockNumber() + 1), nextBlock);
+        } catch (FileNotFoundException e) {
+            return new ErrorPacket(FILE_NOT_FOUND.ERROR_CODE, e.getMessage());
+        } catch (IllegalArgumentException | ConcurrentModificationException e) {
+            return new ErrorPacket(ACCESS_VIOLATION.ERROR_CODE, e.getMessage());
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
     }
 
     /**

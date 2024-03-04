@@ -13,7 +13,7 @@ public abstract class AbstractPacket {
     /**
      * If not null, the packet will be broadcast to all the connections.
      */
-    public BroadcastPacket broadcast;
+    private BroadcastPacket broadcast;
 
     /**
      * Default Constructor for creating a packet. All packets must have an opcode.

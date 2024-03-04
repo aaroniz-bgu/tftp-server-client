@@ -6,12 +6,13 @@ import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 import bgu.spl.net.impl.tftp.packets.AcknowledgementPacket;
 import bgu.spl.net.impl.tftp.packets.ErrorPacket;
 import bgu.spl.net.impl.tftp.packets.LoginRequestPacket;
+import bgu.spl.net.impl.tftp.services.TftpService;
 import bgu.spl.net.srv.Connections;
 
 import java.util.NoSuchElementException;
 
 import static bgu.spl.net.impl.tftp.GlobalConstants.DEFAULT_ACK;
-import static bgu.spl.net.impl.tftp.services.TftpErrorCodes.*;
+import static bgu.spl.net.impl.tftp.TftpErrorCodes.*;
 
 public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 
@@ -28,8 +29,8 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
         this.connectionId = connectionId;
         this.connections  = connections;
 
-        // High coupling here buddy:
-        controller = new TftpApi();
+        // High coupling here buddy: TODO FIX COUPLING
+        controller = new TftpApi(new TftpService());
         // Check if anything else should be done here.
     }
 
@@ -41,7 +42,15 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 
         // Retrieve op code:
         short opCode = EncodeDecodeHelper.byteToShort(new byte[]{message[0], message[1]});
-        Operation op = Operation.OPS[opCode]; // todo if out of bounds send illegal op.
+        Operation op;
+
+        try {
+            op = Operation.OPS[opCode];
+        } catch (IndexOutOfBoundsException e) {
+            connections.send(connectionId,
+                    new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE, "Illegal TFTP operation").getBytes());
+            return;
+        }
 
         // Check if we're logged before giving any service:
         if(!isLogged) {
@@ -131,8 +140,10 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
                 return controller.listDirectoryRequest();
             case DELRQ:
                 return controller.deleteRequest(request);
+            case ACK:
+                return controller.readRequestContinue(request);
             default:
-                return null;
+                return new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE, "Operation is not supported.");
         }
     }
 

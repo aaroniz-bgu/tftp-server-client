@@ -52,7 +52,6 @@ public interface ITftpService {
      */
     public boolean writeRequest(String filename) throws Exception;
 
-    //TODO update exception type if needed
     /**
      * Data to write to file
      * Make sure to broadcast to all users the file was added after the complete write was successful.

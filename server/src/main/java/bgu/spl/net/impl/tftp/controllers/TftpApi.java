@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.util.ConcurrentModificationException;
 
 import static bgu.spl.net.impl.tftp.GlobalConstants.DEFAULT_ACK;
+import static bgu.spl.net.impl.tftp.GlobalConstants.ENCODING_FORMAT;
 import static bgu.spl.net.impl.tftp.TftpErrorCodes.*;
 
 /**
@@ -31,9 +32,9 @@ public class TftpApi {
         try {
             DeleteRequestPacket requestPacket = new DeleteRequestPacket(request);
             service.deleteFile(requestPacket.getFileName());
-            AcknowledgementPacket output = new AcknowledgementPacket(DEFAULT_ACK);
-            output.setBroadcastPacket(new BroadcastPacket(false ,requestPacket.getFileName()));
-            return output;
+            AcknowledgementPacket response = new AcknowledgementPacket(DEFAULT_ACK);
+            response.setBroadcastPacket(new BroadcastPacket(false ,requestPacket.getFileName()));
+            return response;
         } catch (ConcurrentModificationException e) {
             return new ErrorPacket(ACCESS_VIOLATION.ERROR_CODE, e.getMessage());
         } catch (Exception e) {
@@ -109,12 +110,12 @@ public class TftpApi {
     public AbstractPacket writeData(byte[] request) {
         try {
             DataPacket requestPacket = new DataPacket(request);
-            AcknowledgementPacket output = new AcknowledgementPacket(requestPacket.getBlockNumber());
+            AcknowledgementPacket response = new AcknowledgementPacket(requestPacket.getBlockNumber());
             String filename = service.writeData(requestPacket.getData());
             if(filename != null) {
-                output.setBroadcastPacket(new BroadcastPacket(true, filename));
+                response.setBroadcastPacket(new BroadcastPacket(true, filename));
             }
-            return output;
+            return response;
         } catch (Exception e) {
             return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
         }
@@ -126,7 +127,12 @@ public class TftpApi {
      * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong.
      */
     public AbstractPacket listDirectoryRequest() {
-        throw new UnsupportedOperationException("Yet to be implemented");
+        try {
+            byte[] response = service.directoryRequest().getBytes(ENCODING_FORMAT);
+            return new DataPacket((short) response.length, (short) 0, response);
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
     }
   
 }

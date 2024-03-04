@@ -88,7 +88,16 @@ public class TftpApi {
      * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise.
      */
     public AbstractPacket writeRequest(byte[] request) {
-        throw new UnsupportedOperationException("Yet to be implemented");
+        try {
+            WriteRequestPacket requestPacket = new WriteRequestPacket(request);
+            if(service.writeRequest(requestPacket.getFileName())) {
+                return new AcknowledgementPacket(DEFAULT_ACK);
+            } else {
+                return new ErrorPacket(FILE_ALREADY_EXISTS.ERROR_CODE, "File name exists.");
+            }
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
     }
 
     /**
@@ -97,7 +106,12 @@ public class TftpApi {
      * @return returns AcknowledgementPacket(+block) if succeeded saving and @link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong.
      */
     public AbstractPacket writeData(byte[] request) {
-        throw new UnsupportedOperationException("Yet to be implemented");
+        try {
+            DataPacket requestPacket = new DataPacket(request);
+            //TODO
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
     }
 
     /**

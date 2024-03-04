@@ -142,6 +142,8 @@ public class TftpService implements ITftpService {
 
     /**
      * Returns whether a file can be written or not to the server.
+     * Will mark the file as being written if the file doesn't exist in the ConcurrencyHelper.
+     *
      * @param filename file to write
      * @return True if no such already file exists.
      * @throws IOException Read createNewFile in {@link java.io.File}
@@ -149,18 +151,28 @@ public class TftpService implements ITftpService {
      */
     @Override
     public boolean writeRequest(String filename) throws Exception {
-        if(isIllegalFileName(filename)) {
+        if (isIllegalFileName(filename)) {
             throw new IllegalArgumentException("Illegal file name!");
         }
-        if(new File(WORK_DIR + filename).createNewFile()) {
+        // Mark the file as being written before creating it
+        ConcurrencyHelper.getInstance().write(filename);
+        if (new File(WORK_DIR + filename).createNewFile()) {
             currentFileName = filename;
             return true;
+        } else {
+            // If file creation fails, mark the write operation as completed to avoid locking the file.
+            // This shouldn't happen, but just in case.
+            ConcurrencyHelper.getInstance().writeCompleted(filename);
+            return false;
         }
-        return false;
     }
+
 
     /**
      * Writes/appends the data to the currently being written file.
+     * Will release the file from being written if the data is less than the maximum data packet size
+     * or an error occurs in the ConcurrencyHelper.
+     *
      * @param data data to write
      * @throws IllegalStateException If no file is currently being written, which means the service is in illegal
      * state.
@@ -168,17 +180,53 @@ public class TftpService implements ITftpService {
      */
     @Override
     public void writeData(byte[] data) throws Exception {
-        if(currentFileName == null) {
+        if (currentFileName == null) {
             throw new IllegalStateException("No file is being written currently.");
         }
         File file = new File(WORK_DIR + currentFileName);
-        OutputStream stream = new FileOutputStream(file, true);
-        stream.write(data);
-        stream.close();
+        try (OutputStream stream = new FileOutputStream(file, true)) {
+            stream.write(data);
+            // Check if this is the last block of the file
+            if (data.length < MAX_DATA_PACKET_SIZE) {
+                // Mark the write operation as completed
+                ConcurrencyHelper.getInstance().writeCompleted(currentFileName);
+                currentFileName = null; // Reset currentFileName as the write operation is completed
+            }
+        } catch (IOException e) {
+            // Handle IOException
+            ConcurrencyHelper.getInstance().writeCompleted(currentFileName);
+            currentFileName = null;
+            throw e;
+        }
     }
 
+    /**
+     * Lists all the files in the server's directory.
+     * Will list them in the following format:
+     * (file name 1)\n
+     * (file name 2)\n
+     * ⋯
+     * (file name n)\n
+     * Will exclude files that are still being created.
+     * @return All the files in the server that are not still being created.
+     * @throws IOException If some sort of error occurred while listing the files.
+     */
     @Override
     public String directoryRequest() throws Exception {
-        return null;
+        File directory = new File(WORK_DIR);
+        // Initialize empty list of files
+        String fileList = "";
+        // List all files in the directory
+        String[] files = directory.list();
+        if (files == null) {
+            throw new IOException("Directory does not exist or an I/O error occurred");
+        }
+        ConcurrencyHelper helper = ConcurrencyHelper.getInstance();
+        for (String file : files) {
+            if (!helper.isBeingWritten(file)) {
+                fileList += file + "\n";
+            }
+        }
+        return fileList;
     }
 }

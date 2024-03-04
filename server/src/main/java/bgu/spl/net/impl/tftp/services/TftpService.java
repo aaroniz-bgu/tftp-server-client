@@ -238,8 +238,6 @@ public class TftpService implements ITftpService {
     @Override
     public byte[] directoryRequest() throws Exception {
         File directory = new File(WORK_DIR);
-        System.out.println(directory.getAbsolutePath());
-        System.out.println(directory.isDirectory());
         // Initialize empty list of files
         StringBuilder fileList = new StringBuilder();
         // List all files in the directory

@@ -106,6 +106,7 @@ public class TftpService implements ITftpService {
      * array then data-packet size if the block is the last of the file, if no bytes we're read due to the
      * request of a block which isn't found in the file or if there was an undetected IO error within the OS.
      * @throws ConcurrentModificationException If the file is currently being deleted.
+     * @throws IllegalArgumentException If the file's name is not allowed.
      * @throws FileNotFoundException If the OS could not locate the file.
      * @throws IOException If there was some kind of IO faulty while reading the file.
      */
@@ -122,8 +123,12 @@ public class TftpService implements ITftpService {
      * Used for continuous reading of a file after we already read the first block.
      * Note that if readFile(String, short) wasn't called before this may produce undefined behaviour.
      * @param block The current block of file being read.
-     * @return
-     * @throws Exception
+     * @return A byte array containing the file's contents in the specified block. Might return a smaller
+     * array then data-packet size if the block is the last of the file, if no bytes we're read due to the
+     * request of a block which isn't found in the file or if there was an undetected IO error within the OS.
+     * @throws ConcurrentModificationException If the file is currently being deleted.
+     * @throws FileNotFoundException If the OS could not locate the file.
+     * @throws IOException If there was some kind of IO faulty while reading the file.
      */
     public byte[] readFile(short block) throws Exception {
         return readFile(block);

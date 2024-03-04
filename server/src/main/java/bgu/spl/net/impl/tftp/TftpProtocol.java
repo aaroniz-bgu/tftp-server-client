@@ -42,7 +42,15 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 
         // Retrieve op code:
         short opCode = EncodeDecodeHelper.byteToShort(new byte[]{message[0], message[1]});
-        Operation op = Operation.OPS[opCode]; // todo if out of bounds send illegal op.
+        Operation op;
+
+        try {
+            op = Operation.OPS[opCode];
+        } catch (IndexOutOfBoundsException e) {
+            connections.send(connectionId,
+                    new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE, "Illegal TFTP operation").getBytes());
+            return;
+        }
 
         // Check if we're logged before giving any service:
         if(!isLogged) {

@@ -59,10 +59,9 @@ public interface ITftpService {
      * Assumes the service already knows which user is writing the file and the file name.
      * If to write was incomplete, the file should be deleted without broadcasting to all the users.
      * @param data data to write
-     * @return the block number of the data that was written.
      * @exception Exception if some sort of error occurred while writing the data. Otherwise, assume write was successful.
      */
-    public short writeData(byte[] data) throws Exception;
+    public void writeData(byte[] data) throws Exception;
 
     /**
      * Request to list all the files in the server

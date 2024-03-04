@@ -72,7 +72,11 @@ public class TftpService implements ITftpService {
             return new byte[0];
         }
         try {
-            ConcurrencyHelper.getInstance().read(currentFileName);
+            if(block == 0) {
+                ConcurrencyHelper.getInstance().read(currentFileName);
+            } else {
+                block--;
+            }
 
             InputStream stream = new FileInputStream(new File(WORK_DIR + currentFileName));
             long skipBytes = block * MAX_DATA_PACKET_SIZE;

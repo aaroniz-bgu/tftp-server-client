@@ -154,6 +154,11 @@ public class TftpService implements ITftpService {
         return false;
     }
 
+    /**
+     * Writes/appends the data to the currently being written file.
+     * @param data data to write
+     * @throws IOException Read write in {@link java.io.OutputStream}.
+     */
     @Override
     public void writeData(byte[] data) throws Exception {
         if(currentFileName == null) {

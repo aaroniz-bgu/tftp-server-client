@@ -94,8 +94,9 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             connections.disconnect(connectionId);
             terminate = true;
             isLogged  = false;
-            connections.send(connectionId, new AcknowledgementPacket(DEFAULT_ACK).getBytes());
         } catch (RuntimeException e) {
+            // TBH THIS IS NOT GOOD, THE CONNECTION IS DELETED AND CLOSED ALREADY
+            // WE CAN'T CHANGE THE INTERFACE SO WE CAN'T GET THE CONNECTION AFTER THIS:
             connections.send(connectionId, new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage()).getBytes());
         }
     }

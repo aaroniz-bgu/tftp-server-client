@@ -2,11 +2,27 @@ package bgu.spl.net.impl.tftp.controllers;
 
 import bgu.spl.net.impl.tftp.TftpConnections;
 import bgu.spl.net.impl.tftp.packets.AbstractPacket;
+import bgu.spl.net.impl.tftp.packets.AcknowledgementPacket;
+import bgu.spl.net.impl.tftp.packets.DeleteRequestPacket;
+import bgu.spl.net.impl.tftp.packets.ErrorPacket;
+import bgu.spl.net.impl.tftp.services.ITftpService;
+
+import java.util.ConcurrentModificationException;
+
+import static bgu.spl.net.impl.tftp.GlobalConstants.DEFAULT_ACK;
+import static bgu.spl.net.impl.tftp.TftpErrorCodes.ACCESS_VIOLATION;
+import static bgu.spl.net.impl.tftp.TftpErrorCodes.NOT_DEF;
 
 /**
  * Serializes data from the server and deserializes data from client.
  */
 public class TftpApi {
+
+    private final ITftpService service;
+
+    public TftpApi(ITftpService service) {
+        this.service = service;
+    }
 
     /**
      * Deletes a file from the server.

@@ -1,10 +1,6 @@
 package bgu.spl.net.impl.tftp.controllers;
 
-import bgu.spl.net.impl.tftp.TftpConnections;
-import bgu.spl.net.impl.tftp.packets.AbstractPacket;
-import bgu.spl.net.impl.tftp.packets.AcknowledgementPacket;
-import bgu.spl.net.impl.tftp.packets.DeleteRequestPacket;
-import bgu.spl.net.impl.tftp.packets.ErrorPacket;
+import bgu.spl.net.impl.tftp.packets.*;
 import bgu.spl.net.impl.tftp.services.ITftpService;
 
 import java.util.ConcurrentModificationException;
@@ -32,9 +28,17 @@ public class TftpApi {
      * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise.
      */
     public AbstractPacket deleteRequest(byte[] request) {
-        // TODO remember in the service check for dumb trials of user to get out of the folder.
-        // Check for '/' or '\\' chars in the file name.
-        throw new UnsupportedOperationException("Yet to be implemented");
+        try {
+            DeleteRequestPacket requestPacket = new DeleteRequestPacket(request);
+            service.deleteFile(requestPacket.getFileName());
+            AcknowledgementPacket output = new AcknowledgementPacket(DEFAULT_ACK);
+            output.setBroadcastPacket(new BroadcastPacket(false ,requestPacket.getFileName()));
+            return output;
+        } catch (ConcurrentModificationException e) {
+            return new ErrorPacket(ACCESS_VIOLATION.ERROR_CODE, e.getMessage());
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
     }
 
     /**

@@ -86,7 +86,7 @@ public class TftpService implements ITftpService {
             int read = stream.read(output);
             stream.close();
 
-            if(read == -1) {
+            if(read == -1 || read == 0) {
                 currentFileName = null;
                 return new byte[0];
             } else if (read < MAX_DATA_PACKET_SIZE) {

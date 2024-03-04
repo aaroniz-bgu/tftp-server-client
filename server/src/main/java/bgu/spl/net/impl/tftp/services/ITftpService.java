@@ -1,10 +1,5 @@
 package bgu.spl.net.impl.tftp.services;
 
-import bgu.spl.net.impl.tftp.packets.AbstractPacket;
-import bgu.spl.net.impl.tftp.packets.LoginRequestPacket;
-
-import java.util.ConcurrentModificationException;
-
 /**
  * This interface represents the TFTP service.
  * The TFTP service is used to handle all the requests from the client after the request has been decoded.
@@ -23,7 +18,7 @@ public interface ITftpService {
      * And will be contained in the {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} as an attached broadcast packet.
      * @param filename file to delete
      */
-    public void deleteFile(String filename) throws Exception;
+    void deleteFile(String filename) throws Exception;
 
     /**
      * Used in the first time we want to read a file.
@@ -32,7 +27,7 @@ public interface ITftpService {
      * @return byte array of the file
      * @throws Exception depends on the implementation, but there will be exceptions.
      */
-    public byte[] readFile(String filename) throws Exception;
+    byte[] readFile(String filename) throws Exception;
 
     /**
      * Used for continuous reading of a file.
@@ -41,7 +36,7 @@ public interface ITftpService {
      * @return byte array of the file
      * @throws Exception depends on the implementation, but there will be exceptions.
      */
-    public byte[] readFile(short block) throws Exception;
+    byte[] readFile(short block) throws Exception;
 
     /**
      * Request to write file to server
@@ -50,7 +45,7 @@ public interface ITftpService {
      * @return {@link bgu.spl.net.impl.tftp.packets.AcknowledgementPacket} if file doesn't exist and user can write to it.
      * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise. (with the correct error code and message)
      */
-    public boolean writeRequest(String filename) throws Exception;
+    boolean writeRequest(String filename) throws Exception;
 
     /**
      * Data to write to file
@@ -60,12 +55,12 @@ public interface ITftpService {
      * @param data data to write
      * @exception Exception if some sort of error occurred while writing the data. Otherwise, assume write was successful.
      */
-    public void writeData(byte[] data) throws Exception;
+    void writeData(byte[] data) throws Exception;
 
     /**
      * Request to list all the files in the server
      * @return All the files in the server
      * @exception Exception if some sort of error occurred while listing the files.
      */
-    public String directoryRequest() throws Exception;
+    String directoryRequest() throws Exception;
 }

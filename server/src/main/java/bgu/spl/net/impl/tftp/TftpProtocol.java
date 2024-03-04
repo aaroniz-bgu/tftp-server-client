@@ -11,7 +11,7 @@ import bgu.spl.net.srv.Connections;
 import java.util.NoSuchElementException;
 
 import static bgu.spl.net.impl.tftp.GlobalConstants.DEFAULT_ACK;
-import static bgu.spl.net.impl.tftp.services.TftpErrorCodes.*;
+import static bgu.spl.net.impl.tftp.TftpErrorCodes.*;
 
 public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 

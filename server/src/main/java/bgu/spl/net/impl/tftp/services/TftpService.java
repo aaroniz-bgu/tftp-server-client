@@ -157,12 +157,14 @@ public class TftpService implements ITftpService {
     /**
      * Writes/appends the data to the currently being written file.
      * @param data data to write
+     * @throws IllegalStateException If no file is currently being written, which means the service is in illegal
+     * state.
      * @throws IOException Read write in {@link java.io.OutputStream}.
      */
     @Override
     public void writeData(byte[] data) throws Exception {
         if(currentFileName == null) {
-            throw new IllegalStateException("No file is being read currently.");
+            throw new IllegalStateException("No file is being written currently.");
         }
         File file = new File(WORK_DIR + currentFileName);
         OutputStream stream = new FileOutputStream(file, true);

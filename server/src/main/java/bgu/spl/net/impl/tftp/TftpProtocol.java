@@ -132,8 +132,10 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
                 return controller.listDirectoryRequest();
             case DELRQ:
                 return controller.deleteRequest(request);
+            case ACK:
+                return controller.readRequestContinue(request);
             default:
-                return null;
+                return new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE, "Operation is not supported.");
         }
     }
 

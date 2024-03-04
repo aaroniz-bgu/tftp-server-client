@@ -26,10 +26,12 @@ public class ConcurrencyHelper {
      * Files currently being deleted, cannot be read.
      */
     private final List<String> beingDeleted;
+    private final List<String> beingWritten;
 
     private ConcurrencyHelper() {
         filesToReaders = new HashMap<>();
         beingDeleted = new Vector<>();
+        beingWritten = new Vector<>();
     }
 
     public static ConcurrencyHelper getInstance() {
@@ -77,6 +79,18 @@ public class ConcurrencyHelper {
     }
 
     /**
+     * Flags the file as being written.
+     * @param file The file's name as it is found in the server's directory.
+     * @throws ConcurrentModificationException If the file currently being written.
+     */
+    public synchronized void write(String file) throws ConcurrentModificationException {
+        if(filesToReaders.containsKey(file)) {
+            throw new ConcurrentModificationException("File is currently being written by another user.");
+        }
+        beingWritten.add(file);
+    }
+
+    /**
      * Deletion was completed.
      * @param file File
      */
@@ -86,5 +100,25 @@ public class ConcurrencyHelper {
         }
 
         beingDeleted.remove(file);
+    }
+
+    /**
+     * Writing was completed.
+     * @param file File
+     */
+    public void writeCompleted(String file) {
+        if(!beingWritten.contains(file)) {
+            throw new NoSuchElementException();
+        }
+        beingWritten.remove(file);
+    }
+
+    /**
+     * Checks if the file is currently being written.
+     * @param file File
+     * @return True if the file is currently being written, false otherwise.
+     */
+    public boolean isBeingWritten(String file) {
+        return beingWritten.contains(file);
     }
 }

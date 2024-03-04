@@ -66,6 +66,7 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             // Check whether the request is to disconnect.
         } else if(op == Operation.DISC) {
             disconnect();
+            return;
         }
 
         // Call the API and get response:

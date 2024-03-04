@@ -28,7 +28,7 @@ public abstract class BaseServer<T> implements Server<T> {
         this.encdecFactory = encdecFactory;
         this.connections = connections;
 		this.sock = null;
-        this.idCounter = 0;
+        this.idCounter = 1;
     }
 
 

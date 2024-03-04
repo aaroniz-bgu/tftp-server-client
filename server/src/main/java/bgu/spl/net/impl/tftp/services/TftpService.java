@@ -131,7 +131,7 @@ public class TftpService implements ITftpService {
      * @throws IOException If there was some kind of IO faulty while reading the file.
      */
     public byte[] readFile(short block) throws Exception {
-        return readFile(block);
+        return readFileHelper(block);
     }
 
 

@@ -174,12 +174,13 @@ public class TftpService implements ITftpService {
      * or an error occurs in the ConcurrencyHelper.
      *
      * @param data data to write
+     * @return The file's name when writing is done.
      * @throws IllegalStateException If no file is currently being written, which means the service is in illegal
      * state.
      * @throws IOException Read write in {@link java.io.OutputStream}.
      */
     @Override
-    public boolean writeData(byte[] data) throws Exception {
+    public String writeData(byte[] data) throws Exception {
         if (currentFileName == null) {
             throw new IllegalStateException("No file is being written currently.");
         }
@@ -192,8 +193,9 @@ public class TftpService implements ITftpService {
             if (data.length < MAX_DATA_PACKET_SIZE) {
                 // Mark the write operation as completed
                 ConcurrencyHelper.getInstance().writeCompleted(currentFileName);
+                String output = currentFileName;
                 currentFileName = null; // Reset currentFileName as the write operation is completed
-                return true;
+                return output;
             }
         } catch (IOException e) {
             // Handle IOException
@@ -202,7 +204,7 @@ public class TftpService implements ITftpService {
             stream.close();
             throw e;
         }
-        return false;
+        return null;
     }
 
     /**

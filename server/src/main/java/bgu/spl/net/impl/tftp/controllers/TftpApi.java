@@ -108,7 +108,10 @@ public class TftpApi {
     public AbstractPacket writeData(byte[] request) {
         try {
             DataPacket requestPacket = new DataPacket(request);
-            //TODO
+            AcknowledgementPacket output = new AcknowledgementPacket(requestPacket.getBlockNumber());
+            if(service.writeData(requestPacket.getData())) {
+                output.getBroadcastPacket();
+            }
         } catch (Exception e) {
             return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
         }

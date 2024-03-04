@@ -134,9 +134,22 @@ public class TftpService implements ITftpService {
         return readFileHelper(block);
     }
 
-
+    /**
+     * Returns whether a file can be written or not to the server.
+     * @param filename file to write
+     * @return True if no such already file exists.
+     * @throws IOException Read createNewFile in {@link java.io.File}
+     * @throws SecurityException Read createNewFile in {@link java.io.File}
+     */
     @Override
-    public boolean writeRequest(String filename) {
+    public boolean writeRequest(String filename) throws Exception {
+        if(isIllegalFileName(filename)) {
+            throw new IllegalArgumentException("Illegal file name!");
+        }
+        if(new File(WORK_DIR + filename).createNewFile()) {
+            currentFileName = filename;
+            return true;
+        }
         return false;
     }
 

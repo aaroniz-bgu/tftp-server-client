@@ -55,7 +55,7 @@ public interface ITftpService {
      * @param data data to write
      * @exception Exception if some sort of error occurred while writing the data. Otherwise, assume write was successful.
      */
-    void writeData(byte[] data) throws Exception;
+    boolean writeData(byte[] data) throws Exception;
 
     /**
      * Request to list all the files in the server

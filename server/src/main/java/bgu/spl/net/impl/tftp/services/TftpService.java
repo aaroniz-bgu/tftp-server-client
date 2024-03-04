@@ -179,7 +179,7 @@ public class TftpService implements ITftpService {
      * @throws IOException Read write in {@link java.io.OutputStream}.
      */
     @Override
-    public void writeData(byte[] data) throws Exception {
+    public boolean writeData(byte[] data) throws Exception {
         if (currentFileName == null) {
             throw new IllegalStateException("No file is being written currently.");
         }
@@ -187,13 +187,14 @@ public class TftpService implements ITftpService {
         OutputStream stream = new FileOutputStream(file, true);
         try {
             stream.write(data);
+            stream.close();
             // Check if this is the last block of the file
             if (data.length < MAX_DATA_PACKET_SIZE) {
                 // Mark the write operation as completed
                 ConcurrencyHelper.getInstance().writeCompleted(currentFileName);
                 currentFileName = null; // Reset currentFileName as the write operation is completed
+                return true;
             }
-            stream.close();
         } catch (IOException e) {
             // Handle IOException
             ConcurrencyHelper.getInstance().writeCompleted(currentFileName);
@@ -201,6 +202,7 @@ public class TftpService implements ITftpService {
             stream.close();
             throw e;
         }
+        return false;
     }
 
     /**
@@ -218,7 +220,7 @@ public class TftpService implements ITftpService {
     public String directoryRequest() throws Exception {
         File directory = new File(WORK_DIR);
         // Initialize empty list of files
-        String fileList = "";
+        StringBuilder fileList = new StringBuilder();
         // List all files in the directory
         String[] files = directory.list();
         if (files == null) {
@@ -227,9 +229,9 @@ public class TftpService implements ITftpService {
         ConcurrencyHelper helper = ConcurrencyHelper.getInstance();
         for (String file : files) {
             if (!helper.isBeingWritten(file)) {
-                fileList += file + "\n";
+                fileList.append(file).append("\n");
             }
         }
-        return fileList;
+        return fileList.toString();
     }
 }

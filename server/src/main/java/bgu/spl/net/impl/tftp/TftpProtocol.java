@@ -6,6 +6,7 @@ import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 import bgu.spl.net.impl.tftp.packets.AcknowledgementPacket;
 import bgu.spl.net.impl.tftp.packets.ErrorPacket;
 import bgu.spl.net.impl.tftp.packets.LoginRequestPacket;
+import bgu.spl.net.impl.tftp.services.TftpService;
 import bgu.spl.net.srv.Connections;
 
 import java.util.NoSuchElementException;
@@ -28,8 +29,8 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
         this.connectionId = connectionId;
         this.connections  = connections;
 
-        // High coupling here buddy:
-        controller = new TftpApi();
+        // High coupling here buddy: TODO FIX COUPLING
+        controller = new TftpApi(new TftpService());
         // Check if anything else should be done here.
     }
 

@@ -8,6 +8,10 @@ import java.util.ConcurrentModificationException;
 import static bgu.spl.net.impl.tftp.GlobalConstants.MAX_DATA_PACKET_SIZE;
 import static bgu.spl.net.impl.tftp.services.ServicesConstants.WORK_DIR;
 
+/**
+ * Implements the services in such manner where reading/writing operations will be called sequentially.
+ * If reading/writing of a file would be interfered by another request may produce undefined behaviour.
+ */
 public class TftpService implements ITftpService {
 
     private String currentFileName;

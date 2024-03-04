@@ -99,6 +99,7 @@ public class TftpService implements ITftpService {
     }
 
     /**
+     * Used in the first time we want to read a file.
      * Reads a file block and returns it, might return an array smaller than a block size or equals to 0.
      * @param filename The file's name in the server's working directory.
      * @param block The current block of file being read.

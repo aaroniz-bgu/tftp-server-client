@@ -82,10 +82,6 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 
             // Respond to the user.
             connections.send(connectionId, controllerResponse.getBytes());
-        } else {
-            connections.send(connectionId, new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE,
-                    "Operation " + opCode + " isn't supported.")
-                    .getBytes());
         }
     }
 
@@ -141,7 +137,7 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             case DELRQ:
                 return controller.deleteRequest(request);
             case ACK:
-                return controller.readRequestContinue(request);
+                return controller.acknowledgementRequest(request);
             default:
                 return new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE, "Operation is not supported.");
         }

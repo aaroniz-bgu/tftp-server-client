@@ -17,17 +17,7 @@ import java.util.function.Supplier;
 public class TftpServer extends BaseServer<byte[]> {
 
     public TftpServer(int port) {
-        super(port, new Supplier<BidiMessagingProtocol<byte[]>>() {
-            private final Connections<byte[]> CON = new TftpConnections();
-            private int idCounter = 0;
-            @Override
-            public BidiMessagingProtocol<byte[]> get() {
-                TftpProtocol protocol = new TftpProtocol();
-                protocol.start(idCounter, CON);
-                idCounter++;
-                return protocol;
-            }
-        }, TftpEncoderDecoder::new);
+        super(port, TftpProtocol::new, TftpEncoderDecoder::new, new TftpConnections());
     }
 
     /**

@@ -13,17 +13,29 @@ public abstract class BaseServer<T> implements Server<T> {
     private final int port;
     private final Supplier<BidiMessagingProtocol<T>> protocolFactory;
     private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
+    private final Connections<T> connections;
     private ServerSocket sock;
+    private int idCounter;
 
     public BaseServer(
             int port,
             Supplier<BidiMessagingProtocol<T>> protocolFactory,
-            Supplier<MessageEncoderDecoder<T>> encdecFactory) {
+            Supplier<MessageEncoderDecoder<T>> encdecFactory,
+            Connections<T> connections) {
 
         this.port = port;
         this.protocolFactory = protocolFactory;
         this.encdecFactory = encdecFactory;
+        this.connections = connections;
 		this.sock = null;
+        this.idCounter = 0;
+    }
+
+
+    public BaseServer(int port,
+                      Supplier<BidiMessagingProtocol<T>> protocolFactory,
+                      Supplier<MessageEncoderDecoder<T>> encdecFactory) {
+        this(port, protocolFactory, encdecFactory, null);
     }
 
     @Override
@@ -37,12 +49,16 @@ public abstract class BaseServer<T> implements Server<T> {
             while (!Thread.currentThread().isInterrupted()) {
 
                 Socket clientSock = serverSock.accept();
-
+                BidiMessagingProtocol<T> protocol = protocolFactory.get();
                 BlockingConnectionHandler<T> handler = new BlockingConnectionHandler<>(
                         clientSock,
                         encdecFactory.get(),
-                        protocolFactory.get());
-
+                        protocol);
+                if(connections != null) {
+                    connections.connect(idCounter, handler);
+                    protocol.start(idCounter, connections);
+                    idCounter++;
+                }
                 execute(handler);
             }
         } catch (IOException ex) {

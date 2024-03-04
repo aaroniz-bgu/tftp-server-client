@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.util.ConcurrentModificationException;
 
+import static bgu.spl.net.impl.tftp.GlobalConstants.ENCODING_FORMAT;
 import static bgu.spl.net.impl.tftp.GlobalConstants.MAX_DATA_PACKET_SIZE;
 import static bgu.spl.net.impl.tftp.services.ServicesConstants.WORK_DIR;
 
@@ -20,6 +21,7 @@ import static bgu.spl.net.impl.tftp.services.ServicesConstants.WORK_DIR;
 public class TftpService implements ITftpService {
 
     private String currentFileName;
+    private String filesList;
 
     /**
      * Checks whether the user is trying any funny business.
@@ -140,6 +142,17 @@ public class TftpService implements ITftpService {
         return readFileHelper(block);
     }
 
+    public byte[] handleAcknowledgement(short block) throws Exception {
+        if(currentFileName == null && filesList == null) {
+            return null;
+        }
+        if(currentFileName != null) {
+            return readFileHelper(block);
+        } else {
+            return continuousFilesReader(block);
+        }
+    }
+
     /**
      * Returns whether a file can be written or not to the server.
      * Will mark the file as being written if the file doesn't exist in the ConcurrencyHelper.
@@ -219,8 +232,10 @@ public class TftpService implements ITftpService {
      * @throws IOException If some sort of error occurred while listing the files.
      */
     @Override
-    public String directoryRequest() throws Exception {
+    public byte[] directoryRequest() throws Exception {
         File directory = new File(WORK_DIR);
+        System.out.println(directory.getAbsolutePath());
+        System.out.println(directory.isDirectory());
         // Initialize empty list of files
         StringBuilder fileList = new StringBuilder();
         // List all files in the directory
@@ -234,6 +249,21 @@ public class TftpService implements ITftpService {
                 fileList.append(file).append("\n");
             }
         }
-        return fileList.toString();
+        filesList = fileList.toString();
+        byte[] raw = filesList.getBytes(ENCODING_FORMAT);
+        int outLength = Math.min(MAX_DATA_PACKET_SIZE, raw.length);
+        byte[] out = new byte[outLength];
+        System.arraycopy(raw, 0, out, 0, outLength);
+        return out;
+    }
+
+    private byte[] continuousFilesReader(short block) {
+        if(block * MAX_DATA_PACKET_SIZE >= filesList.length()) {
+            filesList = null;
+            return null;
+        }
+        int start = block * MAX_DATA_PACKET_SIZE;
+        int end = Math.min(filesList.length(), (block + 1) * MAX_DATA_PACKET_SIZE);
+        return filesList.substring(start, end).getBytes(ENCODING_FORMAT);
     }
 }

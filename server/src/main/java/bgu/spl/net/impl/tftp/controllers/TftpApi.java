@@ -52,7 +52,7 @@ public class TftpApi {
         try {
             ReadRequestPacket requestPacket = new ReadRequestPacket(request);
             byte[] firstBlock = service.readFile(requestPacket.getFileName());
-            return new DataPacket((short) firstBlock.length, (short) 0, firstBlock);
+            return new DataPacket((short) firstBlock.length, (short) 1, firstBlock);
         } catch (FileNotFoundException e) {
             return new ErrorPacket(FILE_NOT_FOUND.ERROR_CODE, e.getMessage());
         } catch (IllegalArgumentException | ConcurrentModificationException e) {
@@ -68,10 +68,13 @@ public class TftpApi {
      * @return {@link bgu.spl.net.impl.tftp.packets.DataPacket}'s containing file data or
      * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket}.
      */
-    public AbstractPacket readRequestContinue(byte[] request) {
+    public AbstractPacket acknowledgementRequest(byte[] request) {
         try {
             AcknowledgementPacket requestPacket = new AcknowledgementPacket(request);
-            byte[] nextBlock = service.readFile((short) (requestPacket.getBlockNumber() + 1));
+            byte[] nextBlock = service.handleAcknowledgement((short) (requestPacket.getBlockNumber() + 1));
+            if(nextBlock == null) {
+                return null;
+            }
             return new DataPacket((short) nextBlock.length, (short) (requestPacket.getBlockNumber() + 1), nextBlock);
         } catch (FileNotFoundException e) {
             return new ErrorPacket(FILE_NOT_FOUND.ERROR_CODE, e.getMessage());
@@ -128,8 +131,8 @@ public class TftpApi {
      */
     public AbstractPacket listDirectoryRequest() {
         try {
-            byte[] response = service.directoryRequest().getBytes(ENCODING_FORMAT);
-            return new DataPacket((short) response.length, (short) 0, response);
+            byte[] response = service.directoryRequest();
+            return new DataPacket((short) response.length, (short) 1, response);
         } catch (Exception e) {
             return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
         }

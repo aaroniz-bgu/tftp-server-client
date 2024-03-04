@@ -16,9 +16,9 @@ import java.util.Arrays;
  * This packet is sent from the client to the server and vice versa.
  */
 public class DataPacket extends AbstractPacket {
-    public final short packetSize;
-    public final short blockNumber;
-    public final byte[] data;
+    private final short packetSize;
+    private final short blockNumber;
+    private final byte[] data;
 
     /**
      * Default constructor to build an internal contract for data-packets.

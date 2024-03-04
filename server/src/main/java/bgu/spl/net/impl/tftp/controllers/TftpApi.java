@@ -103,15 +103,18 @@ public class TftpApi {
     /**
      * Writes a file to the server, accepting data.
      * @param request User's request.
-     * @return returns AcknowledgementPacket(+block) if succeeded saving and @link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong.
+     * @return returns AcknowledgementPacket(+block) if succeeded saving and
+     * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong.
      */
     public AbstractPacket writeData(byte[] request) {
         try {
             DataPacket requestPacket = new DataPacket(request);
             AcknowledgementPacket output = new AcknowledgementPacket(requestPacket.getBlockNumber());
-            if(service.writeData(requestPacket.getData())) {
-                output.getBroadcastPacket();
+            String filename = service.writeData(requestPacket.getData());
+            if(filename != null) {
+                output.setBroadcastPacket(new BroadcastPacket(true, filename));
             }
+            return output;
         } catch (Exception e) {
             return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
         }

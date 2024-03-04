@@ -68,6 +68,9 @@ public class TftpService implements ITftpService {
      * @throws IOException If there was some kind of IO faulty while reading the file.     * @throws Exception
      */
     private byte[] readFileHelper(short block) throws Exception{
+        if(currentFileName == null) {
+            return new byte[0];
+        }
         try {
             ConcurrencyHelper.getInstance().read(currentFileName);
 
@@ -80,6 +83,7 @@ public class TftpService implements ITftpService {
             stream.close();
 
             if(read == -1) {
+                currentFileName = null;
                 return new byte[0];
             } else if (read < MAX_DATA_PACKET_SIZE) {
                 ConcurrencyHelper.getInstance().free(currentFileName);

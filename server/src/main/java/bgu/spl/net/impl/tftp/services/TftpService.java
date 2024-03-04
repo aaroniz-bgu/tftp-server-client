@@ -50,6 +50,55 @@ public class TftpService implements ITftpService {
     }
 
     /**
+     * Used to make continuous file reading easier.
+     * Reads a file block and returns it, might return an array smaller than a block size or equals to 0.
+     * @param block The current block of file being read.
+     * @return A byte array containing the file's contents in the specified block. Might return a smaller
+     * array then data-packet size if the block is the last of the file, if no bytes we're read due to the
+     * request of a block which isn't found in the file or if there was an undetected IO error within the OS.
+     * @throws ConcurrentModificationException If the file is currently being deleted.
+     * @throws FileNotFoundException If the OS could not locate the file.
+     * @throws IOException If there was some kind of IO faulty while reading the file.     * @throws Exception
+     */
+    private byte[] readFileHelper(short block) throws Exception{
+        try {
+            ConcurrencyHelper.getInstance().read(currentFileName);
+
+            InputStream stream = new FileInputStream(new File(WORK_DIR + currentFileName));
+            long skipBytes = block * MAX_DATA_PACKET_SIZE;
+            stream.skip(skipBytes);
+
+            byte[] output = new byte[MAX_DATA_PACKET_SIZE];
+            int read = stream.read(output);
+
+            if(read == -1) {
+                return new byte[0];
+            } else if (read < MAX_DATA_PACKET_SIZE) {
+                ConcurrencyHelper.getInstance().free(currentFileName);
+                currentFileName = null;
+
+                byte[] trimmed = new byte[read];
+                System.arraycopy(output, 0, trimmed, 0, read);
+                return trimmed;
+            }
+            return output;
+            // We're not calling free in finally because the file may be still in reading progress.
+        } catch (ConcurrentModificationException e) {
+            ConcurrencyHelper.getInstance().free(currentFileName);
+            currentFileName = null;
+            throw new RuntimeException(e);
+        } catch (FileNotFoundException e) {
+            ConcurrencyHelper.getInstance().free(currentFileName);
+            currentFileName = null;
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            ConcurrencyHelper.getInstance().free(currentFileName);
+            currentFileName = null;
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Reads a file block and returns it, might return an array smaller than a block size or equals to 0.
      * @param filename The file's name in the server's working directory.
      * @param block The current block of file being read.
@@ -61,41 +110,25 @@ public class TftpService implements ITftpService {
      * @throws IOException If there was some kind of IO faulty while reading the file.
      */
     @Override
-    public byte[] readRequest(String filename, short block) throws Exception {
+    public byte[] readFile(String filename) throws Exception {
         if(isIllegalFileName(filename)) {
             throw new IllegalArgumentException("Illegal file name!");
         }
-        try {
-            ConcurrencyHelper.getInstance().read(filename);
-
-            InputStream stream = new FileInputStream(new File(WORK_DIR + filename));
-            long skipBytes = block * MAX_DATA_PACKET_SIZE;
-            stream.skip(skipBytes);
-
-            byte[] output = new byte[MAX_DATA_PACKET_SIZE];
-            int read = stream.read(output);
-            
-            if(read == -1) {
-                return new byte[0];
-            } else if (read < MAX_DATA_PACKET_SIZE) {
-                ConcurrencyHelper.getInstance().free(filename);
-                byte[] trimmed = new byte[read];
-                System.arraycopy(output, 0, trimmed, 0, read);
-                return trimmed;
-            }
-            return output;
-            // We're not calling free in finally because the file may be still in reading progress.
-        } catch (ConcurrentModificationException e) {
-            ConcurrencyHelper.getInstance().free(filename);
-            throw new RuntimeException(e);
-        } catch (FileNotFoundException e) {
-            ConcurrencyHelper.getInstance().free(filename);
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            ConcurrencyHelper.getInstance().free(filename);
-            throw new RuntimeException(e);
-        }
+        currentFileName = filename;
+        return readFileHelper((short) 0);
     }
+
+    /**
+     * Used for continuous reading of a file after we already read the first block.
+     * Note that if readFile(String, short) wasn't called before this may produce undefined behaviour.
+     * @param block The current block of file being read.
+     * @return
+     * @throws Exception
+     */
+    public byte[] readFile(short block) throws Exception {
+        return readFile(block);
+    }
+
 
     @Override
     public boolean writeRequest(String filename) {

@@ -102,7 +102,6 @@ public class TftpService implements ITftpService {
      * Used in the first time we want to read a file.
      * Reads a file block and returns it, might return an array smaller than a block size or equals to 0.
      * @param filename The file's name in the server's working directory.
-     * @param block The current block of file being read.
      * @return A byte array containing the file's contents in the specified block. Might return a smaller
      * array then data-packet size if the block is the last of the file, if no bytes we're read due to the
      * request of a block which isn't found in the file or if there was an undetected IO error within the OS.

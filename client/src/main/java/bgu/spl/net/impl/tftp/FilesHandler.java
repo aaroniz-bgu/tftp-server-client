@@ -8,9 +8,13 @@ import static bgu.spl.net.impl.tftp.GlobalConstants.WORK_DIR;
 public class FilesHandler {
     /**
      * The name of the file being read, written or deleted.
+     * @Exception IllegalArgumentException If the file name is empty or contains a null character.
      */
     private String fileName;
-    public FilesHandler(String fileName) {
+    public FilesHandler(String fileName) throws IllegalArgumentException{
+        if (fileName.length() == 0 || fileName.contains("\0")) {
+            throw new IllegalArgumentException("File name cannot contain null character or be empty");
+        }
         this.fileName = fileName;
     }
     public String getFileName() {
@@ -21,7 +25,7 @@ public class FilesHandler {
      * Reads a block of data from the client's file.
      * If the file is done reading, the file name will be set to null.
      * @param block The block to read.
-     * @return The block of data.
+     * @return The block of data. If the file is done reading, an empty array will be returned.
      * @throws RuntimeException If the file is not found or an I/O error occurred.
      */
     public byte[] ReadFile(int block) throws RuntimeException {
@@ -57,7 +61,7 @@ public class FilesHandler {
      * @throws RuntimeException If the file is not found or an I/O error occurred.
      * @throws IllegalStateException If no file is currently being written to.
      */
-    public void WriteFile(byte[] data) throws RuntimeException {
+    public void WriteData(byte[] data) throws RuntimeException {
         if (fileName == null) {
             throw new IllegalStateException("No file currently being written to.");
         }

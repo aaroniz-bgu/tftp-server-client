@@ -143,6 +143,15 @@ public class TftpProtocol implements MessagingProtocol<byte[]> {
                 }
                 directoryList = new StringBuilder();
 
+                // TODO make sure this is the correct way to deal with this type of error
+                //      Added a method to cancel the termination of the protocol in case the user failed to disconnect
+                //      from the server which can be accessed elsewhere if this isn't the right spot.
+                // If the request was a disconnect request, this means the user failed to disconnect from the server.
+                // Therefore, the client should not be terminated yet.
+                if (terminate) {
+                    terminate = false;
+                }
+
                 return null;
             default:
                 // Unrecognized operation.
@@ -165,6 +174,13 @@ public class TftpProtocol implements MessagingProtocol<byte[]> {
      */
     public void terminate() {
         terminate = true;
+    }
+
+    /**
+     * Cancel the termination of the protocol in case the user failed to disconnect from the server.
+     */
+    public void cancelTerminate() {
+        terminate = false;
     }
 
     /**

@@ -52,6 +52,10 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             return;
         }
 
+        if(op == Operation.DISC) {
+            disconnect();
+            return;
+        }
         // Check if we're logged before giving any service:
         if(!isLogged) {
             if(op == Operation.LOGRQ) {
@@ -63,9 +67,6 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
                                 .getBytes());
             }
             return;
-            // Check whether the request is to disconnect.
-        } else if(op == Operation.DISC) {
-            disconnect();
         }
 
         // Call the API and get response:
@@ -82,10 +83,6 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 
             // Respond to the user.
             connections.send(connectionId, controllerResponse.getBytes());
-        } else {
-            connections.send(connectionId, new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE,
-                    "Operation " + opCode + " isn't supported.")
-                    .getBytes());
         }
     }
 
@@ -97,8 +94,9 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             connections.disconnect(connectionId);
             terminate = true;
             isLogged  = false;
-            connections.send(connectionId, new AcknowledgementPacket(DEFAULT_ACK).getBytes());
         } catch (RuntimeException e) {
+            // TBH THIS IS NOT GOOD, THE CONNECTION IS DELETED AND CLOSED ALREADY
+            // WE CAN'T CHANGE THE INTERFACE SO WE CAN'T GET THE CONNECTION AFTER THIS:
             connections.send(connectionId, new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage()).getBytes());
         }
     }
@@ -141,7 +139,7 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             case DELRQ:
                 return controller.deleteRequest(request);
             case ACK:
-                return controller.readRequestContinue(request);
+                return controller.acknowledgementRequest(request);
             default:
                 return new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE, "Operation is not supported.");
         }

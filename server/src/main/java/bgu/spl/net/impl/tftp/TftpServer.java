@@ -1,10 +1,13 @@
 package bgu.spl.net.impl.tftp;
 
+import bgu.spl.net.api.BidiMessagingProtocol;
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
 import bgu.spl.net.srv.BaseServer;
 import bgu.spl.net.srv.BlockingConnectionHandler;
+import bgu.spl.net.srv.Connections;
 
+import javax.swing.*;
 import java.util.function.Supplier;
 
 /**
@@ -12,8 +15,9 @@ import java.util.function.Supplier;
  * This server handles messages by serializing packets into byte streams.
  */
 public class TftpServer extends BaseServer<byte[]> {
+
     public TftpServer(int port) {
-        super(port, TftpProtocol::new, TftpEncoderDecoder::new);
+        super(port, TftpProtocol::new, TftpEncoderDecoder::new, new TftpConnections());
     }
 
     /**

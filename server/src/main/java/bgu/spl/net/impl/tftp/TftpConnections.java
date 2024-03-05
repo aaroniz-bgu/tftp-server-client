@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.tftp;
 
+import bgu.spl.net.impl.tftp.packets.AcknowledgementPacket;
 import bgu.spl.net.srv.ConnectionHandler;
 import bgu.spl.net.srv.Connections;
 
@@ -8,6 +9,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+
+import static bgu.spl.net.impl.tftp.GlobalConstants.DEFAULT_ACK;
 
 
 public class TftpConnections implements Connections<byte[]> {
@@ -40,10 +43,12 @@ public class TftpConnections implements Connections<byte[]> {
 
     @Override
     public synchronized void disconnect(int connectionId) {
+        ConnectionHandler<byte[]> con = connections.get(connectionId);
         try {
-            connections.get(connectionId).close();
             connections.remove(connectionId);
             listeners.remove(connectionId);
+            con.send(new AcknowledgementPacket(DEFAULT_ACK).getBytes());
+            con.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -6,9 +6,9 @@ public enum Operation {
     WRQ((short) 2, true),
     DATA((short) 3, false),
     ACK((short) 4, false),
-    ERROR((short) 5, false),
-    DIRQ((short) 6, true),
-    LOGRQ((short) 7, false),
+    ERROR((short) 5, true),
+    DIRQ((short) 6, false),
+    LOGRQ((short) 7, true),
     DELRQ((short) 8, true),
     BCAST((short) 9, true),
     DISC((short) 10, false);

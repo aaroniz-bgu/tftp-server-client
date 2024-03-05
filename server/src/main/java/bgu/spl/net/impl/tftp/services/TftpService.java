@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.util.ConcurrentModificationException;
 
+import static bgu.spl.net.impl.tftp.GlobalConstants.ENCODING_FORMAT;
 import static bgu.spl.net.impl.tftp.GlobalConstants.MAX_DATA_PACKET_SIZE;
 import static bgu.spl.net.impl.tftp.services.ServicesConstants.WORK_DIR;
 
@@ -20,6 +21,7 @@ import static bgu.spl.net.impl.tftp.services.ServicesConstants.WORK_DIR;
 public class TftpService implements ITftpService {
 
     private String currentFileName;
+    private String filesList;
 
     /**
      * Checks whether the user is trying any funny business.
@@ -47,10 +49,9 @@ public class TftpService implements ITftpService {
             if (!new File(WORK_DIR + filename).delete()) {
                 throw new RuntimeException("Failed to delete file.");
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
             ConcurrencyHelper.getInstance().deletionCompleted(filename);
+        } catch (Exception e) {
+            throw e;
         }
     }
 
@@ -66,8 +67,15 @@ public class TftpService implements ITftpService {
      * @throws IOException If there was some kind of IO faulty while reading the file.     * @throws Exception
      */
     private byte[] readFileHelper(short block) throws Exception{
+        if(currentFileName == null) {
+            return new byte[0];
+        }
         try {
-            ConcurrencyHelper.getInstance().read(currentFileName);
+            if(block == 0) {
+                ConcurrencyHelper.getInstance().read(currentFileName);
+            } else {
+                block--;
+            }
 
             InputStream stream = new FileInputStream(new File(WORK_DIR + currentFileName));
             long skipBytes = block * MAX_DATA_PACKET_SIZE;
@@ -77,7 +85,8 @@ public class TftpService implements ITftpService {
             int read = stream.read(output);
             stream.close();
 
-            if(read == -1) {
+            if(read == -1 || read == 0) {
+                currentFileName = null;
                 return new byte[0];
             } else if (read < MAX_DATA_PACKET_SIZE) {
                 ConcurrencyHelper.getInstance().free(currentFileName);
@@ -140,6 +149,17 @@ public class TftpService implements ITftpService {
         return readFileHelper(block);
     }
 
+    public byte[] handleAcknowledgement(short block) throws Exception {
+        if(currentFileName == null && filesList == null) {
+            return null;
+        }
+        if(currentFileName != null) {
+            return readFileHelper(block);
+        } else {
+            return continuousFilesReader(block);
+        }
+    }
+
     /**
      * Returns whether a file can be written or not to the server.
      * Will mark the file as being written if the file doesn't exist in the ConcurrencyHelper.
@@ -154,16 +174,22 @@ public class TftpService implements ITftpService {
         if (isIllegalFileName(filename)) {
             throw new IllegalArgumentException("Illegal file name!");
         }
-        // Mark the file as being written before creating it
-        ConcurrencyHelper.getInstance().write(filename);
-        if (new File(WORK_DIR + filename).createNewFile()) {
-            currentFileName = filename;
-            return true;
-        } else {
-            // If file creation fails, mark the write operation as completed to avoid locking the file.
-            // This shouldn't happen, but just in case.
+        try {
+            // Mark the file as being written before creating it
+            ConcurrencyHelper.getInstance().write(filename);
+            if (new File(WORK_DIR + filename).createNewFile()) {
+                currentFileName = filename;
+                return true;
+            } else {
+                // If file creation fails, mark the write operation as completed to avoid locking the file.
+                // This shouldn't happen, but just in case.
+                ConcurrencyHelper.getInstance().writeCompleted(filename);
+                return false;
+            }
+        } catch (Exception e) {
             ConcurrencyHelper.getInstance().writeCompleted(filename);
-            return false;
+            currentFileName = null;
+            throw e;
         }
     }
 
@@ -219,7 +245,7 @@ public class TftpService implements ITftpService {
      * @throws IOException If some sort of error occurred while listing the files.
      */
     @Override
-    public String directoryRequest() throws Exception {
+    public byte[] directoryRequest() throws Exception {
         File directory = new File(WORK_DIR);
         // Initialize empty list of files
         StringBuilder fileList = new StringBuilder();
@@ -234,6 +260,21 @@ public class TftpService implements ITftpService {
                 fileList.append(file).append("\n");
             }
         }
-        return fileList.toString();
+        filesList = fileList.toString();
+        byte[] raw = filesList.getBytes(ENCODING_FORMAT);
+        int outLength = Math.min(MAX_DATA_PACKET_SIZE, raw.length);
+        byte[] out = new byte[outLength];
+        System.arraycopy(raw, 0, out, 0, outLength);
+        return out;
+    }
+
+    private byte[] continuousFilesReader(short block) {
+        if(block * MAX_DATA_PACKET_SIZE >= filesList.length()) {
+            filesList = null;
+            return null;
+        }
+        int start = block * MAX_DATA_PACKET_SIZE;
+        int end = Math.min(filesList.length(), (block + 1) * MAX_DATA_PACKET_SIZE);
+        return filesList.substring(start, end).getBytes(ENCODING_FORMAT);
     }
 }

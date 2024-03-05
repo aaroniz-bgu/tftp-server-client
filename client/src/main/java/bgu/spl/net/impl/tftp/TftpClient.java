@@ -1,9 +1,10 @@
 package bgu.spl.net.impl.tftp;
 
+import bgu.spl.net.impl.tftp.packets.AbstractPacket;
+
 import java.io.*;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.SynchronousQueue;
 
 public class TftpClient {
     public static void main(String[] args) {
@@ -12,21 +13,40 @@ public class TftpClient {
             System.exit(1);
         }
 
-        ConcurrentLinkedQueue<String> requestQueue = new ConcurrentLinkedQueue<>();
-
         String host = args[0];
         int port = Integer.parseInt(args[1]);
-        // TODO wait somewhere
-        Thread inputManager = new Thread(() -> {
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
+
+        SynchronousQueue<String> queue = new SynchronousQueue<>();
+        CliInterface inter = new CliInterface(queue);
+        Thread interfaceThread = new Thread(inter, "Interface-Thread");
+
+        Thread clientThread = new Thread(() -> {
+            try (Socket sock = new Socket(host, port);
+                 BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+                 BufferedWriter out = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()))
+            ) {
+                TftpEncoderDecoder encdec = new TftpEncoderDecoder();
+                TftpProtocol protocol = new TftpProtocol();
+
+                interfaceThread.start();
+
                 while (!Thread.currentThread().isInterrupted()) {
-                    String line = in.readLine();
-                    if (line != null) {
-                        requestQueue.add(line);
+                    if(!queue.isEmpty()) {
+                        AbstractPacket packet = null; //PacketFactory.createPacket(queue.poll()); TODO
+                        if(packet != null)
+                            sock.getOutputStream().write(encdec.encode(packet.getBytes()));
+                    }
+
+                    byte[] msg = encdec.decodeNextByte((byte) in.read());
+                    if(msg != null) {
+                        protocol.process(msg);
                     }
                 }
+                interfaceThread.interrupt();
             } catch (IOException ex) {
+                ex.printStackTrace();
+                System.out.println(ex.getMessage());
             }
-        });
+        }, "Listener-Thread");
     }
 }

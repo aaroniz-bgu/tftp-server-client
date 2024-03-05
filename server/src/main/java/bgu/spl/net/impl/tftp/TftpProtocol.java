@@ -52,6 +52,10 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             return;
         }
 
+        if(op == Operation.DISC) {
+            disconnect();
+            return;
+        }
         // Check if we're logged before giving any service:
         if(!isLogged) {
             if(op == Operation.LOGRQ) {
@@ -62,10 +66,6 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
                                 "Unauthenticated user cannot perform actions, please login")
                                 .getBytes());
             }
-            return;
-            // Check whether the request is to disconnect.
-        } else if(op == Operation.DISC) {
-            disconnect();
             return;
         }
 

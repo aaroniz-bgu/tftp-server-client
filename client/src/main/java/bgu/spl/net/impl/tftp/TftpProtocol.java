@@ -2,9 +2,9 @@ package bgu.spl.net.impl.tftp;
 
 import bgu.spl.net.api.MessagingProtocol;
 
-public class TftpProtocol<T> implements MessagingProtocol<T> {
+public class TftpProtocol implements MessagingProtocol<byte[]> {
     @Override
-    public T process(T msg) {
+    public byte[] process(byte[] msg) {
         return null;
     }
 
@@ -13,3 +13,4 @@ public class TftpProtocol<T> implements MessagingProtocol<T> {
         return false;
     }
 }
+

@@ -8,7 +8,7 @@ public class EncodeDecodeHelper {
      * @return a byte array containing the short data.
      */
     public static byte[] shortToByte(short convert) {
-        return new byte[]{(byte) (convert >> 8), (byte) (convert & 0xff)};
+        return new byte[]{(byte) ((convert >> 8) & 0xff), (byte) (convert & 0xff)};
     }
 
     /**
@@ -21,6 +21,6 @@ public class EncodeDecodeHelper {
         if(bytes.length != 2) {
             throw new IllegalArgumentException("Cannot convert into a short, contains more/less than 2 bytes.");
         }
-        return (short) (((short) bytes[0] << 8 | (short) (bytes[1])));
+        return (short) ((short) ((bytes[0] & 0xff) << 8) | (short) (bytes[1] & 0xff));
     }
 }

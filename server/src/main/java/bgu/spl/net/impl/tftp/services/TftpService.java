@@ -49,10 +49,9 @@ public class TftpService implements ITftpService {
             if (!new File(WORK_DIR + filename).delete()) {
                 throw new RuntimeException("Failed to delete file.");
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
             ConcurrencyHelper.getInstance().deletionCompleted(filename);
+        } catch (Exception e) {
+            throw e;
         }
     }
 
@@ -175,16 +174,22 @@ public class TftpService implements ITftpService {
         if (isIllegalFileName(filename)) {
             throw new IllegalArgumentException("Illegal file name!");
         }
-        // Mark the file as being written before creating it
-        ConcurrencyHelper.getInstance().write(filename);
-        if (new File(WORK_DIR + filename).createNewFile()) {
-            currentFileName = filename;
-            return true;
-        } else {
-            // If file creation fails, mark the write operation as completed to avoid locking the file.
-            // This shouldn't happen, but just in case.
+        try {
+            // Mark the file as being written before creating it
+            ConcurrencyHelper.getInstance().write(filename);
+            if (new File(WORK_DIR + filename).createNewFile()) {
+                currentFileName = filename;
+                return true;
+            } else {
+                // If file creation fails, mark the write operation as completed to avoid locking the file.
+                // This shouldn't happen, but just in case.
+                ConcurrencyHelper.getInstance().writeCompleted(filename);
+                return false;
+            }
+        } catch (Exception e) {
             ConcurrencyHelper.getInstance().writeCompleted(filename);
-            return false;
+            currentFileName = null;
+            throw e;
         }
     }
 

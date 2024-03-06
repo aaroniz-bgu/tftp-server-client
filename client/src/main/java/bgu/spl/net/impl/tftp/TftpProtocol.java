@@ -11,10 +11,14 @@ public class TftpProtocol implements MessagingProtocol<byte[]> {
      * True if the protocol should terminate, false otherwise.
      */
     private volatile boolean terminate = false;
-    private ClientCoordinator coordinator;
+    private final ClientCoordinator coordinator;
 
-    public TftpProtocol(ClientCoordinator coordinator) {
-        this.coordinator = coordinator;
+    public TftpProtocol() {
+        this.coordinator = new ClientCoordinator(this);
+    }
+
+    public ClientCoordinator getCoordinator() {
+        return coordinator;
     }
 
     /**

@@ -5,7 +5,6 @@ import bgu.spl.net.impl.tftp.packets.*;
 import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * The client coordinator class.
@@ -63,12 +62,13 @@ public class ClientCoordinator {
      * @param packet the request packet to add to the queue.
      * @return true if the request was added to the queue, false otherwise.
      */
-    public boolean addRequest(LoginRequestPacket packet) {
+    public boolean addRequest(LoginRequestPacket packet) throws InterruptedException {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.LOGRQ;
-            if (requestQueue.add(packet))
+            if (requestQueue.add(packet)) {
+                requestQueue.wait();
                 return true;
-            else {
+            } else {
                 lastSentRequest = Operation.NO_OP;
                 return false;
             }
@@ -82,12 +82,13 @@ public class ClientCoordinator {
      * @param packet the request packet to add to the queue.
      * @return true if the request was added to the queue, false otherwise.
      */
-    public boolean addRequest(DeleteRequestPacket packet) {
+    public boolean addRequest(DeleteRequestPacket packet) throws InterruptedException {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.DELRQ;
-            if (requestQueue.add(packet))
+            if (requestQueue.add(packet)) {
+                requestQueue.wait();
                 return true;
-            else {
+            } else {
                 lastSentRequest = Operation.NO_OP;
                 return false;
             }
@@ -102,12 +103,13 @@ public class ClientCoordinator {
      * @return true if the request was added to the queue, false otherwise.
      * @throws IllegalArgumentException if the file name is empty or contains null character.
      */
-    public boolean addRequest(ReadRequestPacket packet) throws IllegalArgumentException {
+    public boolean addRequest(ReadRequestPacket packet) throws InterruptedException {
         if (lastSentRequest == Operation.NO_OP && requestQueue.add(packet)) {
             try {
                 lastSentRequest = Operation.RRQ;
                 filesHandler = new FilesHandler(packet.getFileName());
                 filesHandler.createNewFile();
+                requestQueue.wait();
                 return true;
             }
             catch (IllegalArgumentException e) {
@@ -128,14 +130,15 @@ public class ClientCoordinator {
      * @param packet the request packet to add to the queue.
      * @return true if the request was added to the queue, false otherwise.
      */
-    public boolean addRequest(WriteRequestPacket packet) {
+    public boolean addRequest(WriteRequestPacket packet) throws InterruptedException {
         if (lastSentRequest == Operation.NO_OP) {
             try {
                 lastSentRequest = Operation.WRQ;
                 filesHandler = new FilesHandler(packet.getFileName());
-                if (requestQueue.add(packet))
+                if (requestQueue.add(packet)) {
+                    requestQueue.wait();
                     return true;
-                else {
+                } else {
                     lastSentRequest = Operation.NO_OP;
                     return false;
                 }
@@ -153,10 +156,14 @@ public class ClientCoordinator {
      * @param packet the request packet to add to the queue.
      * @return true if the request was added to the queue, false otherwise.
      */
-    public boolean addRequest(DirectoryRequestPacket packet) {
+    public boolean addRequest(DirectoryRequestPacket packet) throws InterruptedException {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.DIRQ;
-            return requestQueue.add(packet);
+            boolean added = requestQueue.add(packet);
+            synchronized (requestQueue) {
+                if(added) requestQueue.wait();
+            }
+            return added;
         }
         return false;
     }
@@ -169,10 +176,14 @@ public class ClientCoordinator {
      * @param packet the request packet to add to the queue.
      * @return true if the request was added to the queue, false otherwise.
      */
-    public boolean addRequest(DisconnectPacket packet) {
+    public boolean addRequest(DisconnectPacket packet) throws InterruptedException {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.DISC;
-            return requestQueue.add(packet);
+            boolean added = requestQueue.add(packet);
+            synchronized (requestQueue) {
+                if(added) requestQueue.wait();
+            }
+            return added;
         }
         return false;
     }

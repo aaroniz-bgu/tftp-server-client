@@ -15,7 +15,7 @@ public class PacketFactory {
      * @param userInput the user input
      * @return the packet created according to the command or null if the command is not recognized
      */
-    public static AbstractPacket createPacket(String userInput, TftpProtocol protocol) {
+    public static AbstractPacket createPacket(String userInput) {
         // If the input is empty, return null
         if (userInput == null || userInput.isEmpty()) {
             return null;

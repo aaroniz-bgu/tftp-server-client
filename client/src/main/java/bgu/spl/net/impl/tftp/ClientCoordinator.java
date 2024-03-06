@@ -324,7 +324,9 @@ public class ClientCoordinator {
      */
     private AbstractPacket wakeCLI() {
         AbstractPacket out = requestQueue.poll();
-        requestQueue.notifyAll();
+        synchronized (requestQueue) {
+            requestQueue.notifyAll();
+        }
         return out;
     }
 

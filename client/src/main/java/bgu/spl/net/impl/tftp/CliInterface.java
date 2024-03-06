@@ -1,17 +1,19 @@
 package bgu.spl.net.impl.tftp;
 
+import bgu.spl.net.impl.tftp.packets.AbstractPacket;
+import bgu.spl.net.impl.tftp.packets.PacketFactory;
+
 import java.util.Scanner;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import static bgu.spl.net.impl.tftp.DisplayMessage.print;
 
 public class CliInterface implements Runnable {
 
-    private final SynchronousQueue<String> inputProcess;
+    private final ClientCoordinator coordinator;
     private final Scanner scan = new Scanner(System.in);
 
-    public CliInterface(SynchronousQueue<String> inputProcess) {
-        this.inputProcess = inputProcess;
+    public CliInterface(ClientCoordinator coordinator) {
+        this.coordinator = coordinator;
     }
 
     @Override
@@ -19,8 +21,11 @@ public class CliInterface implements Runnable {
         try {
             while (!Thread.currentThread().isInterrupted()) {
                 String input = scan.nextLine();
-                if (inputProcess.offer(input)) {
-                    wait();
+                AbstractPacket packet = PacketFactory.createPacket(input);
+                if(packet != null) {
+                    if(packet.addSelf(coordinator));
+                } else {
+                    print("Operation is not supported.");
                 }
             }
         } catch (InterruptedException e) {

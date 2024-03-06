@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.tftp.packets;
 
+import bgu.spl.net.impl.tftp.ClientCoordinator;
 import bgu.spl.net.impl.tftp.EncodeDecodeHelper;
 import bgu.spl.net.impl.tftp.GlobalConstants;
 import bgu.spl.net.impl.tftp.Operation;
@@ -91,5 +92,15 @@ public class ErrorPacket extends AbstractPacket{
         byte[] errorCode = EncodeDecodeHelper.shortToByte(this.errorCode);
         byte[] errorMessage = this.errorMessage.getBytes(GlobalConstants.ENCODING_FORMAT);
         return concatArrays(Arrays.asList(opcode, errorCode, errorMessage), true);
+    }
+
+    /**
+     * This should not be called.
+     * @param coordinator The client coordinator to visit.
+     * @return
+     */
+    @Override
+    public boolean addSelf(ClientCoordinator coordinator) {
+        return false;
     }
 }

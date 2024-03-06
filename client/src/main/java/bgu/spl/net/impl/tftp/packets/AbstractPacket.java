@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.tftp.packets;
 
+import bgu.spl.net.impl.tftp.ClientCoordinator;
 import bgu.spl.net.impl.tftp.GlobalConstants;
 
 import java.util.Collection;
@@ -78,4 +79,12 @@ public abstract class AbstractPacket {
         if(terminate) { output[length-1] = GlobalConstants.TERMINATOR; }
         return output;
     }
+
+    /**
+     * Visitor pattern for the client coordinator.
+     * Only for client use.
+     * @param coordinator The client coordinator to visit.
+     * @return true if the packet was added successfully to the queue, false otherwise.
+     */
+    public abstract boolean addSelf(ClientCoordinator coordinator);
 }

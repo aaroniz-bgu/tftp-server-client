@@ -25,7 +25,7 @@ import java.util.concurrent.BlockingQueue;
  * 6. DISC - will receive a DisconnectPacket.
  */
 public class ClientCoordinator {
-    private BlockingQueue<AbstractPacket> requestQueue;
+    private final BlockingQueue<AbstractPacket> requestQueue;
     /**
      * The last request that was sent to the server.
      */
@@ -66,7 +66,9 @@ public class ClientCoordinator {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.LOGRQ;
             if (requestQueue.add(packet)) {
-                requestQueue.wait();
+                synchronized (requestQueue) {
+                    requestQueue.wait();
+                }
                 return true;
             } else {
                 lastSentRequest = Operation.NO_OP;
@@ -86,7 +88,9 @@ public class ClientCoordinator {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.DELRQ;
             if (requestQueue.add(packet)) {
-                requestQueue.wait();
+                synchronized (requestQueue) {
+                    requestQueue.wait();
+                }
                 return true;
             } else {
                 lastSentRequest = Operation.NO_OP;
@@ -109,7 +113,9 @@ public class ClientCoordinator {
                 lastSentRequest = Operation.RRQ;
                 filesHandler = new FilesHandler(packet.getFileName());
                 filesHandler.createNewFile();
-                requestQueue.wait();
+                synchronized (requestQueue) {
+                    requestQueue.wait();
+                }
                 return true;
             }
             catch (IllegalArgumentException e) {
@@ -136,7 +142,9 @@ public class ClientCoordinator {
                 lastSentRequest = Operation.WRQ;
                 filesHandler = new FilesHandler(packet.getFileName());
                 if (requestQueue.add(packet)) {
-                    requestQueue.wait();
+                    synchronized (requestQueue) {
+                        requestQueue.wait();
+                    }
                     return true;
                 } else {
                     lastSentRequest = Operation.NO_OP;
@@ -160,8 +168,10 @@ public class ClientCoordinator {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.DIRQ;
             boolean added = requestQueue.add(packet);
-            synchronized (requestQueue) {
-                if(added) requestQueue.wait();
+            if(added) {
+                synchronized (requestQueue) {
+                    requestQueue.wait();
+                }
             }
             return added;
         }
@@ -180,8 +190,10 @@ public class ClientCoordinator {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.DISC;
             boolean added = requestQueue.add(packet);
-            synchronized (requestQueue) {
-                if(added) requestQueue.wait();
+            if(added) {
+                synchronized (requestQueue) {
+                    requestQueue.wait();
+                }
             }
             return added;
         }

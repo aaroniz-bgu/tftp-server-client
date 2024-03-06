@@ -1,10 +1,6 @@
 package bgu.spl.net.impl.tftp.packets;
 
-import bgu.spl.net.impl.tftp.FilesHandler;
-import bgu.spl.net.impl.tftp.TftpProtocol;
-import jdk.jpackage.internal.Log;
-
-import java.io.IOException;
+import static bgu.spl.net.impl.tftp.DisplayMessage.print;
 
 /**
  * A factory class for creating packets according to the user input
@@ -40,7 +36,7 @@ public class PacketFactory {
                     return packet;
                 }
                 catch (IllegalArgumentException e) {
-                    System.out.println(e.getMessage());
+                    print(e.getMessage());
                     return null;
                 }
             case "DELRQ":
@@ -49,7 +45,7 @@ public class PacketFactory {
                     return packet;
                 }
                 catch (IllegalArgumentException e) {
-                    System.out.println(e.getMessage());
+                    print(e.getMessage());
                     return null;
                 }
             case "RRQ":
@@ -58,7 +54,7 @@ public class PacketFactory {
                     return packet;
                 }
                 catch (IllegalArgumentException e) {
-                    System.out.println("Illegal file name");
+                    print("Illegal file name");
                     return null;
                 }
             case "WRQ":
@@ -67,7 +63,7 @@ public class PacketFactory {
                     return packet;
                 }
                 catch (IllegalArgumentException e) {
-                    System.out.println("file already exists");
+                    print("file already exists");
                     return null;
                 }
             case "DIRQ":

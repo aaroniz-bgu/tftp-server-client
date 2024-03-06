@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.tftp.packets;
 
+import bgu.spl.net.impl.tftp.ClientCoordinator;
 import bgu.spl.net.impl.tftp.EncodeDecodeHelper;
 import bgu.spl.net.impl.tftp.GlobalConstants;
 import bgu.spl.net.impl.tftp.Operation;
@@ -85,5 +86,15 @@ public class DataPacket extends AbstractPacket {
                 EncodeDecodeHelper.shortToByte(packetSize),
                 EncodeDecodeHelper.shortToByte(blockNumber),
                 data), false);
+    }
+
+    /**
+     * This should not be called.
+     * @param coordinator The client coordinator to visit.
+     * @return
+     */
+    @Override
+    public boolean addSelf(ClientCoordinator coordinator) {
+        return false;
     }
 }

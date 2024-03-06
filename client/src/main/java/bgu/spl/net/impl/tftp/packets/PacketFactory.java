@@ -1,5 +1,11 @@
 package bgu.spl.net.impl.tftp.packets;
 
+import bgu.spl.net.impl.tftp.FilesHandler;
+import bgu.spl.net.impl.tftp.TftpProtocol;
+import jdk.jpackage.internal.Log;
+
+import java.io.IOException;
+
 /**
  * A factory class for creating packets according to the user input
  */
@@ -9,7 +15,7 @@ public class PacketFactory {
      * @param userInput the user input
      * @return the packet created according to the command or null if the command is not recognized
      */
-    public static AbstractPacket createPacket(String userInput) {
+    public static AbstractPacket createPacket(String userInput, TftpProtocol protocol) {
         // If the input is empty, return null
         if (userInput == null || userInput.isEmpty()) {
             return null;
@@ -29,13 +35,41 @@ public class PacketFactory {
         // If the command is not recognized, return null
         switch (command) {
             case "LOGRQ":
-                return new LoginRequestPacket(endOfCommand);
+                try {
+                    LoginRequestPacket packet = new LoginRequestPacket(endOfCommand);
+                    return packet;
+                }
+                catch (IllegalArgumentException e) {
+                    System.out.println(e.getMessage());
+                    return null;
+                }
             case "DELRQ":
-                return new DeleteRequestPacket(endOfCommand);
+                try {
+                    DeleteRequestPacket packet = new DeleteRequestPacket(endOfCommand);
+                    return packet;
+                }
+                catch (IllegalArgumentException e) {
+                    System.out.println(e.getMessage());
+                    return null;
+                }
             case "RRQ":
-                return new ReadRequestPacket(endOfCommand);
+                try {
+                    ReadRequestPacket packet = new ReadRequestPacket(endOfCommand);
+                    return packet;
+                }
+                catch (IllegalArgumentException e) {
+                    System.out.println("Illegal file name");
+                    return null;
+                }
             case "WRQ":
-                return new WriteRequestPacket(endOfCommand);
+                try {
+                    WriteRequestPacket packet = new WriteRequestPacket(endOfCommand);
+                    return packet;
+                }
+                catch (IllegalArgumentException e) {
+                    System.out.println("file already exists");
+                    return null;
+                }
             case "DIRQ":
                 return new DirectoryRequestPacket();
             case "DISC":

@@ -97,4 +97,14 @@ public class FilesHandler {
             fileName = null;
         }
     }
+
+    /**
+     * Creates a new file with the file name.
+     * @return True if the file was created, false otherwise.
+     * @throws IOException an I/O error occurred.
+     * @throws SecurityException a security error occurred.
+     */
+    public boolean createNewFile() throws IOException, SecurityException {
+        return new File(WORK_DIR + fileName).createNewFile();
+    }
 }

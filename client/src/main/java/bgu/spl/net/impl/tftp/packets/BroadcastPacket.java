@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.tftp.packets;
 
+import bgu.spl.net.impl.tftp.ClientCoordinator;
 import bgu.spl.net.impl.tftp.EncodeDecodeHelper;
 import bgu.spl.net.impl.tftp.GlobalConstants;
 import bgu.spl.net.impl.tftp.Operation;
@@ -86,5 +87,15 @@ public class BroadcastPacket extends AbstractPacket {
         byte[] add = new byte[]{(byte) (this.add ? 1 : 0)}; // 1 if added, 0 if deleted
         byte[] fileName = this.fileName.getBytes(GlobalConstants.ENCODING_FORMAT);
         return concatArrays(Arrays.asList(opcode, add, fileName), true);
+    }
+
+    /**
+     * This should not be called.
+     * @param coordinator The client coordinator to visit.
+     * @return
+     */
+    @Override
+    public boolean addSelf(ClientCoordinator coordinator) {
+        return false;
     }
 }

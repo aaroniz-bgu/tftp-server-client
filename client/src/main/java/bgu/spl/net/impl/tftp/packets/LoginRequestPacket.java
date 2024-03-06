@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.tftp.packets;
 
+import bgu.spl.net.impl.tftp.ClientCoordinator;
 import bgu.spl.net.impl.tftp.EncodeDecodeHelper;
 import bgu.spl.net.impl.tftp.GlobalConstants;
 import bgu.spl.net.impl.tftp.Operation;
@@ -68,5 +69,10 @@ public class LoginRequestPacket extends AbstractPacket{
         byte[] opcode = EncodeDecodeHelper.shortToByte(this.opCode);
         byte[] userName = this.userName.getBytes(GlobalConstants.ENCODING_FORMAT);
         return concatArrays(Arrays.asList(opcode, userName), true);
+    }
+
+    @Override
+    public boolean addSelf(ClientCoordinator coordinator) {
+        return coordinator.addRequest(this);
     }
 }

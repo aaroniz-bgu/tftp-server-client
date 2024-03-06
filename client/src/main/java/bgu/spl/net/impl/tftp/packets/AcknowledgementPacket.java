@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.tftp.packets;
 
+import bgu.spl.net.impl.tftp.ClientCoordinator;
 import bgu.spl.net.impl.tftp.EncodeDecodeHelper;
 import bgu.spl.net.impl.tftp.Operation;
 
@@ -72,5 +73,15 @@ public class AcknowledgementPacket extends AbstractPacket{
         byte[] opcode = EncodeDecodeHelper.shortToByte(this.opCode);
         byte[] blockNumber = EncodeDecodeHelper.shortToByte(this.blockNumber);
         return concatArrays(Arrays.asList(opcode, blockNumber), false);
+    }
+
+    /**
+     * This should not be called.
+     * @param coordinator The client coordinator to visit.
+     * @return
+     */
+    @Override
+    public boolean addSelf(ClientCoordinator coordinator) {
+        return false;
     }
 }

@@ -25,4 +25,9 @@ public class GlobalConstants {
      * Default acknowledgement block code.
      */
     public static final short DEFAULT_ACK = 0;
+
+    /**
+     * The directory to store the files in.
+     */
+    public static final String WORK_DIR = "Files/";
 }

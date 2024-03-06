@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.tftp.packets;
 
+import bgu.spl.net.impl.tftp.ClientCoordinator;
 import bgu.spl.net.impl.tftp.EncodeDecodeHelper;
 import bgu.spl.net.impl.tftp.Operation;
 
@@ -32,5 +33,10 @@ public class DisconnectPacket extends AbstractPacket{
     @Override
     public byte[] getBytes() {
         return EncodeDecodeHelper.shortToByte(opCode);
+    }
+
+    @Override
+    public boolean addSelf(ClientCoordinator coordinator) {
+        return coordinator.addRequest(this);
     }
 }

@@ -1,5 +1,6 @@
 package bgu.spl.net.impl.tftp.packets;
 
+import bgu.spl.net.impl.tftp.ClientCoordinator;
 import bgu.spl.net.impl.tftp.EncodeDecodeHelper;
 import bgu.spl.net.impl.tftp.GlobalConstants;
 import bgu.spl.net.impl.tftp.Operation;
@@ -63,5 +64,10 @@ public class ReadRequestPacket extends AbstractPacket{
         byte[] opcode = EncodeDecodeHelper.shortToByte(this.opCode);
         byte[] fileName = this.fileName.getBytes(GlobalConstants.ENCODING_FORMAT);
         return concatArrays(Arrays.asList(opcode, fileName), true);
+    }
+
+    @Override
+    public boolean addSelf(ClientCoordinator coordinator) {
+        return coordinator.addRequest(this);
     }
 }

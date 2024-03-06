@@ -19,7 +19,7 @@ public class CliInterface implements Runnable {
     @Override
     public void run() {
         try {
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted() && !coordinator.shouldTerminate()) {
                 String input = scan.nextLine();
                 AbstractPacket packet = PacketFactory.createPacket(input);
                 if(packet != null) {

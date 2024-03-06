@@ -24,7 +24,7 @@ public class PacketFactory {
             endIndex = userInput.length();
         }
         else {
-            endOfCommand = userInput.substring(endIndex);
+            endOfCommand = userInput.substring(endIndex + 1);
         }
         String command = userInput.substring(0, endIndex);
         // Create the packet according to the command

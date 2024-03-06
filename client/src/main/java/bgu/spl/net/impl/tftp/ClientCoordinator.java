@@ -235,10 +235,10 @@ public class ClientCoordinator {
      */
     public byte[] handle(AcknowledgementPacket packet) {
         print("ACK " + packet.getBlockNumber());
-        if (packet.getBlockNumber() != 0 && lastSentRequest == Operation.WRQ) {
+        if (lastSentRequest == Operation.WRQ) {
             // Prepare the next DATA packet to send to the server.
             // If the file is done, then filesHandler will be reset to null.
-            byte[] data = filesHandler.ReadFile(packet.getBlockNumber() + 1);
+            byte[] data = filesHandler.ReadFile(packet.getBlockNumber());
             // Reached the end of the file.
             if (data.length < GlobalConstants.MAX_DATA_PACKET_SIZE) {
                 filesHandler = null;
@@ -316,4 +316,7 @@ public class ClientCoordinator {
         }
     }
 
+    public boolean shouldTerminate() {
+        return protocol.shouldTerminate();
+    }
 }

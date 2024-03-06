@@ -21,16 +21,17 @@ public class TftpClient {
         print("Initiating resources...");
 
         TftpEncoderDecoder encdec = new TftpEncoderDecoder();
-        TftpProtocol protocol = new TftpProtocol();
+        TftpProtocol protocol = new TftpProtocol(encdec);
         CliInterface inter = new CliInterface(protocol.getCoordinator());
         Thread interfaceThread = new Thread(inter, "Interface-Thread");
 
         print("Attempting to connect to server");
 
         try (Socket sock = new Socket(host, port);
-             BufferedInputStream in = new BufferedInputStream(sock.getInputStream());
-             BufferedOutputStream out = new BufferedOutputStream(sock.getOutputStream())
+             InputStream in = sock.getInputStream();
+             OutputStream out = sock.getOutputStream()
         ) {
+            protocol.setOutputStream(out);
 
             print("Starting client...");
 
@@ -38,12 +39,7 @@ public class TftpClient {
 
             print("Client is ready!");
 
-            while (!Thread.currentThread().isInterrupted()) {
-                // Check if the CLI made a request:
-                AbstractPacket send = protocol.getCoordinator().getRequest();
-                if(send != null) {
-                    out.write(encdec.encode(send.getBytes()));
-                }
+            while (!Thread.currentThread().isInterrupted() && !protocol.shouldTerminate()) {
                 // If the server has sent us a message:
                 byte[] msg = encdec.decodeNextByte((byte) in.read());
                 if(msg != null) {

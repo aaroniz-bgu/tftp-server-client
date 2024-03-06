@@ -1,10 +1,12 @@
 package bgu.spl.net.impl.tftp;
 
 import bgu.spl.net.api.MessagingProtocol;
-import bgu.spl.net.impl.tftp.packets.AcknowledgementPacket;
-import bgu.spl.net.impl.tftp.packets.BroadcastPacket;
-import bgu.spl.net.impl.tftp.packets.DataPacket;
-import bgu.spl.net.impl.tftp.packets.ErrorPacket;
+import bgu.spl.net.impl.tftp.packets.*;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
+import static bgu.spl.net.impl.tftp.DisplayMessage.print;
 
 public class TftpProtocol implements MessagingProtocol<byte[]> {
     /**
@@ -12,13 +14,28 @@ public class TftpProtocol implements MessagingProtocol<byte[]> {
      */
     private volatile boolean terminate = false;
     private final ClientCoordinator coordinator;
+    private final TftpEncoderDecoder encdec;
+    private OutputStream out;
 
-    public TftpProtocol() {
+    public TftpProtocol(TftpEncoderDecoder encdec) {
         this.coordinator = new ClientCoordinator(this);
+        this.encdec = encdec;
+        this.out = null;
     }
 
     public ClientCoordinator getCoordinator() {
         return coordinator;
+    }
+
+    /**
+     * Effectively assigns the output stream to write messages to the server (used only to send requests).
+     * @param out Sockets output stream.
+     */
+    public void setOutputStream(OutputStream out) {
+        if(this.out != null) {
+            return;
+        }
+        this.out = out;
     }
 
     /**
@@ -61,6 +78,14 @@ public class TftpProtocol implements MessagingProtocol<byte[]> {
                 return coordinator.handle(new AcknowledgementPacket(msg));
             default:
                 throw new RuntimeException("Unknown operation code");
+        }
+    }
+
+    public void send(AbstractPacket msg) {
+        try {
+            out.write(encdec.encode(msg.getBytes()));
+        } catch (IOException e) {
+            print(e.getMessage());
         }
     }
 

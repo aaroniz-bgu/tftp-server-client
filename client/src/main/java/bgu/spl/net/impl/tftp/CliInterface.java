@@ -23,13 +23,11 @@ public class CliInterface implements Runnable {
                 String input = scan.nextLine();
                 AbstractPacket packet = PacketFactory.createPacket(input);
                 if(packet != null) {
-                    if(packet.addSelf(coordinator));
+                    packet.addSelf(coordinator);
                 } else {
                     print("Operation is not supported.");
                 }
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println(e.getMessage());

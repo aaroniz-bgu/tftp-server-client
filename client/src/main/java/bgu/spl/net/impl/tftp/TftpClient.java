@@ -21,10 +21,7 @@ public class TftpClient {
         Thread interfaceThread = new Thread(inter, "Interface-Thread");
 
         Thread clientThread = new Thread(() -> {
-            try (Socket sock = new Socket(host, port);
-                 BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-                 BufferedWriter out = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()))
-            ) {
+            try (Socket sock = new Socket(host, port)) {
                 TftpEncoderDecoder encdec = new TftpEncoderDecoder();
                 TftpProtocol protocol = new TftpProtocol();
 
@@ -33,11 +30,12 @@ public class TftpClient {
                 while (!Thread.currentThread().isInterrupted()) {
                     if(!queue.isEmpty()) {
                         AbstractPacket packet = null; //PacketFactory.createPacket(queue.poll()); TODO
-                        if(packet != null)
+                        if(packet != null) {
                             sock.getOutputStream().write(encdec.encode(packet.getBytes()));
+                        }
                     }
 
-                    byte[] msg = encdec.decodeNextByte((byte) in.read());
+                    byte[] msg = encdec.decodeNextByte((byte) sock.getInputStream().read());
                     if(msg != null) {
                         protocol.process(msg);
                     }

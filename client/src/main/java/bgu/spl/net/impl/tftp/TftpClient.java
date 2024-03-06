@@ -16,35 +16,37 @@ public class TftpClient {
         String host = args[0];
         int port = Integer.parseInt(args[1]);
 
-        SynchronousQueue<String> queue = new SynchronousQueue<>();
-        CliInterface inter = new CliInterface(queue);
+        TftpEncoderDecoder encdec = new TftpEncoderDecoder();
+        TftpProtocol protocol = new TftpProtocol();
+        CliInterface inter = new CliInterface(protocol.getCoordinator());
         Thread interfaceThread = new Thread(inter, "Interface-Thread");
 
-        Thread clientThread = new Thread(() -> {
-            try (Socket sock = new Socket(host, port)) {
-                TftpEncoderDecoder encdec = new TftpEncoderDecoder();
-                TftpProtocol protocol = new TftpProtocol();
+        try (Socket sock = new Socket(host, port)) {
 
-                interfaceThread.start();
+            interfaceThread.start();
 
-                while (!Thread.currentThread().isInterrupted()) {
-                    if(!queue.isEmpty()) {
-                        AbstractPacket packet = null; //PacketFactory.createPacket(queue.poll()); TODO
-                        if(packet != null) {
-                            sock.getOutputStream().write(encdec.encode(packet.getBytes()));
-                        }
-                    }
+            while (!Thread.currentThread().isInterrupted()) {
+                // Check if the CLI made a request:
+                AbstractPacket send = protocol.getCoordinator().getRequest();
+                if(send != null) {
+                    sock.getOutputStream().write(encdec.encode(send.getBytes()));
+                }
 
-                    byte[] msg = encdec.decodeNextByte((byte) sock.getInputStream().read());
-                    if(msg != null) {
-                        protocol.process(msg);
+                // If the server has sent us a message:
+                byte[] msg = encdec.decodeNextByte((byte) sock.getInputStream().read());
+                if(msg != null) {
+                    // Process the server's message:
+                    byte[] response = protocol.process(msg);
+                    // If the server waits for our response:
+                    if(response != null) {
+                        sock.getOutputStream().write(encdec.encode(response));
                     }
                 }
-                interfaceThread.interrupt();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                System.out.println(ex.getMessage());
             }
-        }, "Listener-Thread");
+            interfaceThread.interrupt();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            System.out.println(ex.getMessage());
+        }
     }
 }

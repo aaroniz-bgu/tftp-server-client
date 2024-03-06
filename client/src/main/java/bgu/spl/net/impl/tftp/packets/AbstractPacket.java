@@ -86,5 +86,5 @@ public abstract class AbstractPacket {
      * @param coordinator The client coordinator to visit.
      * @return true if the packet was added successfully to the queue, false otherwise.
      */
-    public abstract boolean addSelf(ClientCoordinator coordinator);
+    public abstract boolean addSelf(ClientCoordinator coordinator) throws InterruptedException;
 }

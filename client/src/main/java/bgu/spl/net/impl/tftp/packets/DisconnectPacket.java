@@ -36,7 +36,7 @@ public class DisconnectPacket extends AbstractPacket{
     }
 
     @Override
-    public boolean addSelf(ClientCoordinator coordinator) {
+    public boolean addSelf(ClientCoordinator coordinator)  throws InterruptedException {
         return coordinator.addRequest(this);
     }
 }

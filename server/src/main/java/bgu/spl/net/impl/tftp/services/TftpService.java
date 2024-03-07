@@ -46,7 +46,7 @@ public class TftpService implements ITftpService {
         }
         try {
             ConcurrencyHelper.getInstance().delete(filename);
-            if (!new File(WORK_DIR + filename).delete()) {
+            if (!new File(new File(WORK_DIR), filename).delete()) {
                 throw new RuntimeException("Failed to delete file.");
             }
             ConcurrencyHelper.getInstance().deletionCompleted(filename);
@@ -77,7 +77,7 @@ public class TftpService implements ITftpService {
                 block--;
             }
 
-            InputStream stream = new FileInputStream(new File(WORK_DIR + currentFileName));
+            InputStream stream = new FileInputStream(new File(new File(WORK_DIR), currentFileName));
             long skipBytes = block * MAX_DATA_PACKET_SIZE;
             stream.skip(skipBytes);
 
@@ -177,7 +177,7 @@ public class TftpService implements ITftpService {
         try {
             // Mark the file as being written before creating it
             ConcurrencyHelper.getInstance().write(filename);
-            if (new File(WORK_DIR + filename).createNewFile()) {
+            if (new File(new File(WORK_DIR), filename).createNewFile()) {
                 currentFileName = filename;
                 return true;
             } else {
@@ -210,7 +210,8 @@ public class TftpService implements ITftpService {
         if (currentFileName == null) {
             throw new IllegalStateException("No file is being written currently.");
         }
-        File file = new File(WORK_DIR + currentFileName);
+        File dir  = new File(WORK_DIR);
+        File file = new File(dir, currentFileName);
         OutputStream stream = new FileOutputStream(file, true);
         try {
             stream.write(data);

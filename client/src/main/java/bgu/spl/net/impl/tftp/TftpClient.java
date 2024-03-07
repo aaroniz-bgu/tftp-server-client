@@ -36,15 +36,14 @@ public class TftpClient {
             interfaceThread.start();
 
             print("Client is ready!");
-
             while (!Thread.currentThread().isInterrupted() && !protocol.shouldTerminate()) {
                 // If the server has sent us a message:
                 byte[] msg = encdec.decodeNextByte((byte) in.read());
-                if(msg != null) {
+                if (msg != null) {
                     // Process the server's message:
                     byte[] response = protocol.process(msg);
                     // If the server waits for our response:
-                    if(response != null) {
+                    if (response != null) {
                         out.write(encdec.encode(response));
                     }
                 }

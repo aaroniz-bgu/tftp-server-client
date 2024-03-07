@@ -2,6 +2,7 @@ package bgu.spl.net.impl.tftp;
 
 import bgu.spl.net.impl.tftp.packets.*;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import static bgu.spl.net.impl.tftp.DisplayMessage.print;
@@ -141,9 +142,16 @@ public class ClientCoordinator {
             try {
                 lastSentRequest = Operation.WRQ;
                 filesHandler = new FilesHandler(packet.getFileName());
-                protocol.send(packet);
-                waitEndHandle();
-                return true;
+                if(filesHandler.fileExists()) {
+                    protocol.send(packet);
+                    waitEndHandle();
+                    return true;
+                } else {
+                    print("file does not exists");
+                    filesHandler = null;
+                    lastSentRequest = Operation.NO_OP;
+                    return false;
+                }
             }
             catch (IllegalArgumentException e) {
                 lastSentRequest = Operation.NO_OP;
@@ -234,16 +242,30 @@ public class ClientCoordinator {
     public byte[] handle(AcknowledgementPacket packet) {
         print("ACK " + packet.getBlockNumber());
         if (lastSentRequest == Operation.WRQ) {
-            // Prepare the next DATA packet to send to the server.
-            // If the file is done, then filesHandler will be reset to null.
-            byte[] data = filesHandler.ReadFile(packet.getBlockNumber());
-            // Reached the end of the file.
-            if (data.length < GlobalConstants.MAX_DATA_PACKET_SIZE) {
+            try {
+                // Prepare the next DATA packet to send to the server.
+                // If the file is done, then filesHandler will be reset to null.
+                byte[] data = filesHandler.ReadFile(packet.getBlockNumber());
+                // Reached the end of the file.
+                if (data.length < GlobalConstants.MAX_DATA_PACKET_SIZE) {
+                    filesHandler = null;
+                    lastSentRequest = Operation.NO_OP;
+                    wakeCLI();
+                }
+                return new DataPacket((short) data.length, (short) (packet.getBlockNumber() + 1), data).getBytes();
+            } catch (FileNotFoundException e) {
                 filesHandler = null;
                 lastSentRequest = Operation.NO_OP;
                 wakeCLI();
+                print("file not exists");
+                return null;
+            } catch (IOException e) {
+                filesHandler = null;
+                lastSentRequest = Operation.NO_OP;
+                wakeCLI();
+                print("IO error occurred");
+                return null;
             }
-            return new DataPacket((short)data.length, (short) (packet.getBlockNumber() + 1), data).getBytes();
         }
         else if (lastSentRequest == Operation.DISC) {
             // The server responded with an ACK packet with block number 0 when the client asked to disconnect.

@@ -28,7 +28,7 @@ public class FilesHandler {
      * @return The block of data. If the file is done reading, an empty array will be returned.
      * @throws RuntimeException If the file is not found or an I/O error occurred.
      */
-    public byte[] ReadFile(int block) throws RuntimeException {
+    public byte[] ReadFile(int block) throws RuntimeException, IOException {
         try {
             InputStream stream = new FileInputStream(new File(WORK_DIR + fileName));
             long skipBytes = block * MAX_DATA_PACKET_SIZE;
@@ -47,10 +47,10 @@ public class FilesHandler {
             return output;
         } catch (FileNotFoundException e) {
             fileName = null;
-            throw new RuntimeException(e);
+            throw e;
         } catch (IOException e) {
             fileName = null;
-            throw new RuntimeException(e);
+            throw e;
         }
     }
 
@@ -106,5 +106,13 @@ public class FilesHandler {
      */
     public boolean createNewFile() throws IOException, SecurityException {
         return new File(WORK_DIR + fileName).createNewFile();
+    }
+
+    /**
+     * Determines whether a file exists.
+     * @return True if and only if the file exists.
+     */
+    public boolean fileExists() {
+        return new File(fileName).exists();
     }
 }

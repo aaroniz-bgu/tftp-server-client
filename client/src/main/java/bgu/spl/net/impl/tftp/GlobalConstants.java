@@ -29,5 +29,5 @@ public class GlobalConstants {
     /**
      * The directory to store the files in.
      */
-    public static final String WORK_DIR = "Files/";
+    public static final String WORK_DIR = "";
 }

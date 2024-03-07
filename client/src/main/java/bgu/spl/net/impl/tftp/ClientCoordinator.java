@@ -5,7 +5,8 @@ import bgu.spl.net.impl.tftp.packets.*;
 import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+
+import static bgu.spl.net.impl.tftp.DisplayMessage.print;
 
 /**
  * The client coordinator class.
@@ -26,7 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * 6. DISC - will receive a DisconnectPacket.
  */
 public class ClientCoordinator {
-    private BlockingQueue<AbstractPacket> requestQueue;
+    private final Object answers;
     /**
      * The last request that was sent to the server.
      */
@@ -51,7 +52,7 @@ public class ClientCoordinator {
      */
     private TftpProtocol protocol;
     public ClientCoordinator(TftpProtocol protocol) {
-        this.requestQueue = new ArrayBlockingQueue<>(1);
+        this.answers = new Object();
         this.lastSentRequest = Operation.NO_OP;
         this.filesHandler = null;
         this.protocol = protocol;
@@ -66,14 +67,24 @@ public class ClientCoordinator {
     public boolean addRequest(LoginRequestPacket packet) {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.LOGRQ;
-            if (requestQueue.add(packet))
-                return true;
-            else {
-                lastSentRequest = Operation.NO_OP;
-                return false;
-            }
+            protocol.send(packet);
+            waitEndHandle();
+            return true;
         }
         return false;
+    }
+
+    private void waitEndHandle() {
+        while (lastSentRequest != Operation.NO_OP) {
+            // Wait for acknowledgement / error:
+            try {
+                synchronized (answers) {
+                    answers.wait();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     /**
@@ -85,12 +96,9 @@ public class ClientCoordinator {
     public boolean addRequest(DeleteRequestPacket packet) {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.DELRQ;
-            if (requestQueue.add(packet))
-                return true;
-            else {
-                lastSentRequest = Operation.NO_OP;
-                return false;
-            }
+            protocol.send(packet);
+            waitEndHandle();
+            return true;
         }
         return false;
     }
@@ -102,12 +110,14 @@ public class ClientCoordinator {
      * @return true if the request was added to the queue, false otherwise.
      * @throws IllegalArgumentException if the file name is empty or contains null character.
      */
-    public boolean addRequest(ReadRequestPacket packet) throws IllegalArgumentException {
-        if (lastSentRequest == Operation.NO_OP && requestQueue.add(packet)) {
+    public boolean addRequest(ReadRequestPacket packet) {
+        if (lastSentRequest == Operation.NO_OP) {
             try {
                 lastSentRequest = Operation.RRQ;
                 filesHandler = new FilesHandler(packet.getFileName());
                 filesHandler.createNewFile();
+                protocol.send(packet);
+                waitEndHandle();
                 return true;
             }
             catch (IllegalArgumentException e) {
@@ -133,12 +143,9 @@ public class ClientCoordinator {
             try {
                 lastSentRequest = Operation.WRQ;
                 filesHandler = new FilesHandler(packet.getFileName());
-                if (requestQueue.add(packet))
-                    return true;
-                else {
-                    lastSentRequest = Operation.NO_OP;
-                    return false;
-                }
+                protocol.send(packet);
+                waitEndHandle();
+                return true;
             }
             catch (IllegalArgumentException e) {
                 lastSentRequest = Operation.NO_OP;
@@ -156,7 +163,9 @@ public class ClientCoordinator {
     public boolean addRequest(DirectoryRequestPacket packet) {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.DIRQ;
-            return requestQueue.add(packet);
+            protocol.send(packet);
+            waitEndHandle();
+            return true;
         }
         return false;
     }
@@ -172,7 +181,9 @@ public class ClientCoordinator {
     public boolean addRequest(DisconnectPacket packet) {
         if (lastSentRequest == Operation.NO_OP) {
             lastSentRequest = Operation.DISC;
-            return requestQueue.add(packet);
+            protocol.send(packet);
+            waitEndHandle();
+            return true;
         }
         return false;
     }
@@ -190,6 +201,7 @@ public class ClientCoordinator {
             filesHandler.WriteData(packet.getData());
             if (packet.getPacketSize() < GlobalConstants.MAX_DATA_PACKET_SIZE) {
                 // This is the last packet.
+                print("RRQ " + filesHandler.getFileName() + " complete");
                 filesHandler = null;
                 lastSentRequest = Operation.NO_OP;
                 wakeCLI();
@@ -198,7 +210,7 @@ public class ClientCoordinator {
             directoryList.append(new String(packet.getData()));
             if (packet.getPacketSize() < GlobalConstants.MAX_DATA_PACKET_SIZE) {
                 // This is the last packet.
-                System.out.println(directoryList.toString());
+                print(directoryList.toString());
                 directoryList = new StringBuilder();
                 lastSentRequest = Operation.NO_OP;
                 wakeCLI();
@@ -222,11 +234,11 @@ public class ClientCoordinator {
      * @return
      */
     public byte[] handle(AcknowledgementPacket packet) {
-        System.out.println("ACK " + packet.getBlockNumber());
-        if (packet.getBlockNumber() != 0 && lastSentRequest == Operation.WRQ) {
+        print("ACK " + packet.getBlockNumber());
+        if (lastSentRequest == Operation.WRQ) {
             // Prepare the next DATA packet to send to the server.
             // If the file is done, then filesHandler will be reset to null.
-            byte[] data = filesHandler.ReadFile(packet.getBlockNumber() + 1);
+            byte[] data = filesHandler.ReadFile(packet.getBlockNumber());
             // Reached the end of the file.
             if (data.length < GlobalConstants.MAX_DATA_PACKET_SIZE) {
                 filesHandler = null;
@@ -241,11 +253,11 @@ public class ClientCoordinator {
             lastSentRequest = Operation.NO_OP;
             protocol.terminate();
             wakeCLI();
-            // TODO terminate CLI
             return null;
         }
         else {
             lastSentRequest = Operation.NO_OP;
+            wakeCLI();
             return null;
         }
     }
@@ -253,19 +265,19 @@ public class ClientCoordinator {
     /**
      * Shouldn't return anything to the server.
      * Print to the terminal the following:
-     * BCAST <del/add> <file name>
+     * BCAST del/add filename
      * @param packet
      * @return
      */
     public byte[] handle(BroadcastPacket packet) {
-        System.out.println("BCAST " + (packet.isAdd() ? "add" : "del") + " " + packet.getFileName());
+        print("BCAST " + (packet.isAdd() ? "add" : "del") + " " + packet.getFileName());
         return null;
     }
 
     /**
      * Shouldn't return anything to the server.
      * Print to the terminal the following:
-     * Error <Error number> <Error Message if exist>
+     * Error err_number err_Message(if exist)
      * Should delete the file if the client is copying a file from the server and the server
      * encountered an error.
      * Should reset the filesHandler to null if it's not null.
@@ -274,14 +286,14 @@ public class ClientCoordinator {
      * @return
      */
     public byte[] handle(ErrorPacket packet) {
-        System.out.println("Error " + packet.getErrorCode() + " " + packet.getErrorMessage());
+        print("Error " + packet.getErrorCode() + " " + packet.getErrorMessage());
         if (lastSentRequest == Operation.RRQ) {
             try {
-                filesHandler = null;
                 filesHandler.DeleteFile();
+                filesHandler = null;
             }
             catch (Exception e) {
-                System.out.println("Failed to delete file: " + e.getMessage());
+                print("Failed to delete file: " + e.getMessage());
             }
         }
         else if (lastSentRequest == Operation.DIRQ) {
@@ -296,20 +308,15 @@ public class ClientCoordinator {
     }
 
     /**
-     * Empty the request queue and notify all the waiting threads (CLI).
-     * @return the packet that was in the queue, no real need.
+     * Wakes up the cli thread/interface thread.
      */
-    private AbstractPacket wakeCLI() {
-        AbstractPacket out = requestQueue.poll();
-        requestQueue.notifyAll();
-        return out;
+    private void wakeCLI() {
+        synchronized (answers) {
+            answers.notifyAll();
+        }
     }
 
-    /**
-     * Get the next request from the queue without removing it.
-     * @return the next request from the queue.
-     */
-    public AbstractPacket getRequest() {
-        return requestQueue.peek();
+    public boolean shouldTerminate() {
+        return protocol.shouldTerminate();
     }
 }

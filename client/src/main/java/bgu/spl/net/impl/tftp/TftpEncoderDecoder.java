@@ -11,6 +11,8 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
     private LinkedList<Byte> message;
     private Operation operation;
     private boolean isData;
+    private boolean isWeird;
+    private int weirdness;
     private int packetSize;
 
     public TftpEncoderDecoder() {
@@ -18,6 +20,8 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
         operation = NO_OP;
         packetSize = -1;
         isData = false;
+        isWeird = false;
+        weirdness = 0;
     }
 
     @Override
@@ -35,6 +39,9 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
                 isData = true;
             } else if (operation == ACK) {
                 packetSize = 4;
+            } else if(operation == ERROR || operation == BCAST) {
+                isWeird = true;
+                weirdness = operation == ERROR ? 6 : 5;
             }
         }
         if(isData && message.size() == 4) {
@@ -51,13 +58,17 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
             message = new LinkedList<>();
             operation = NO_OP;
             packetSize = -1;
+            isData = false;
+            isWeird = false;
             return result;
         }
         return null;
     }
 
     public boolean messageComplete() {
-        return (operation.TERMINATED && message.getLast().equals(TERMINATOR)) || (message.size() == packetSize);
+        return (!isWeird) && (operation.TERMINATED && message.getLast().equals(TERMINATOR))
+                || (message.size() == packetSize)
+                || (isWeird && message.size() > weirdness && message.getLast().equals(TERMINATOR));
     }
 
     @Override

@@ -3,8 +3,6 @@ package bgu.spl.net.impl.tftp;
 import bgu.spl.net.impl.tftp.packets.*;
 
 import java.io.IOException;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
 import static bgu.spl.net.impl.tftp.DisplayMessage.print;
 

@@ -247,7 +247,7 @@ public class ClientCoordinator {
             }
             return new DataPacket((short)data.length, (short) (packet.getBlockNumber() + 1), data).getBytes();
         }
-        else if (lastSentRequest == Operation.DISC && packet.getBlockNumber() == 0) {
+        else if (lastSentRequest == Operation.DISC) {
             // The server responded with an ACK packet with block number 0 when the client asked to disconnect.
             // Therefore, the protocol should terminate.
             lastSentRequest = Operation.NO_OP;
@@ -312,6 +312,7 @@ public class ClientCoordinator {
      */
     private void wakeCLI() {
         synchronized (answers) {
+            lastSentRequest = Operation.NO_OP;
             answers.notifyAll();
         }
     }

@@ -1,12 +1,25 @@
 package bgu.spl.net.impl.tftp.controllers;
 
-import bgu.spl.net.impl.tftp.TftpConnections;
-import bgu.spl.net.impl.tftp.packets.AbstractPacket;
+import bgu.spl.net.impl.tftp.packets.*;
+import bgu.spl.net.impl.tftp.services.ITftpService;
+
+import java.io.FileNotFoundException;
+import java.util.ConcurrentModificationException;
+
+import static bgu.spl.net.impl.tftp.GlobalConstants.DEFAULT_ACK;
+import static bgu.spl.net.impl.tftp.GlobalConstants.ENCODING_FORMAT;
+import static bgu.spl.net.impl.tftp.TftpErrorCodes.*;
 
 /**
  * Serializes data from the server and deserializes data from client.
  */
 public class TftpApi {
+
+    private final ITftpService service;
+
+    public TftpApi(ITftpService service) {
+        this.service = service;
+    }
 
     /**
      * Deletes a file from the server.
@@ -16,9 +29,17 @@ public class TftpApi {
      * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise.
      */
     public AbstractPacket deleteRequest(byte[] request) {
-        // TODO remember in the service check for dumb trials of user to get out of the folder.
-        // Check for '/' or '\\' chars in the file name.
-        throw new UnsupportedOperationException("Yet to be implemented");
+        try {
+            DeleteRequestPacket requestPacket = new DeleteRequestPacket(request);
+            service.deleteFile(requestPacket.getFileName());
+            AcknowledgementPacket response = new AcknowledgementPacket(DEFAULT_ACK);
+            response.setBroadcastPacket(new BroadcastPacket(false ,requestPacket.getFileName()));
+            return response;
+        } catch (ConcurrentModificationException e) {
+            return new ErrorPacket(ACCESS_VIOLATION.ERROR_CODE, e.getMessage());
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
     }
 
     /**
@@ -28,7 +49,40 @@ public class TftpApi {
      * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket}.
      */
     public AbstractPacket readRequest(byte[] request) {
-        throw new UnsupportedOperationException("Yet to be implemented");
+        try {
+            ReadRequestPacket requestPacket = new ReadRequestPacket(request);
+            byte[] firstBlock = service.readFile(requestPacket.getFileName());
+            return new DataPacket((short) firstBlock.length, (short) 1, firstBlock);
+        } catch (FileNotFoundException e) {
+            return new ErrorPacket(FILE_NOT_FOUND.ERROR_CODE, e.getMessage());
+        } catch (IllegalArgumentException | ConcurrentModificationException e) {
+            return new ErrorPacket(ACCESS_VIOLATION.ERROR_CODE, e.getMessage());
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
+    }
+
+    /**
+     * Used to support continuous reading of a file.
+     * @param request User's request.
+     * @return {@link bgu.spl.net.impl.tftp.packets.DataPacket}'s containing file data or
+     * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket}.
+     */
+    public AbstractPacket acknowledgementRequest(byte[] request) {
+        try {
+            AcknowledgementPacket requestPacket = new AcknowledgementPacket(request);
+            byte[] nextBlock = service.handleAcknowledgement((short) (requestPacket.getBlockNumber() + 1));
+            if(nextBlock == null) {
+                return null;
+            }
+            return new DataPacket((short) nextBlock.length, (short) (requestPacket.getBlockNumber() + 1), nextBlock);
+        } catch (FileNotFoundException e) {
+            return new ErrorPacket(FILE_NOT_FOUND.ERROR_CODE, e.getMessage());
+        } catch (IllegalArgumentException | ConcurrentModificationException e) {
+            return new ErrorPacket(ACCESS_VIOLATION.ERROR_CODE, e.getMessage());
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
     }
 
     /**
@@ -38,16 +92,36 @@ public class TftpApi {
      * and {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} otherwise.
      */
     public AbstractPacket writeRequest(byte[] request) {
-        throw new UnsupportedOperationException("Yet to be implemented");
+        try {
+            WriteRequestPacket requestPacket = new WriteRequestPacket(request);
+            if(service.writeRequest(requestPacket.getFileName())) {
+                return new AcknowledgementPacket(DEFAULT_ACK);
+            } else {
+                return new ErrorPacket(FILE_ALREADY_EXISTS.ERROR_CODE, "File name exists.");
+            }
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
     }
 
     /**
      * Writes a file to the server, accepting data.
      * @param request User's request.
-     * @return returns AcknowledgementPacket(+block) if succeeded saving and @link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong.
+     * @return returns AcknowledgementPacket(+block) if succeeded saving and
+     * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong.
      */
     public AbstractPacket writeData(byte[] request) {
-        throw new UnsupportedOperationException("Yet to be implemented");
+        try {
+            DataPacket requestPacket = new DataPacket(request);
+            AcknowledgementPacket response = new AcknowledgementPacket(requestPacket.getBlockNumber());
+            String filename = service.writeData(requestPacket.getData());
+            if(filename != null) {
+                response.setBroadcastPacket(new BroadcastPacket(true, filename));
+            }
+            return response;
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
     }
 
     /**
@@ -56,7 +130,11 @@ public class TftpApi {
      * {@link bgu.spl.net.impl.tftp.packets.ErrorPacket} if something went wrong.
      */
     public AbstractPacket listDirectoryRequest() {
-        throw new UnsupportedOperationException("Yet to be implemented");
+        try {
+            byte[] response = service.directoryRequest();
+            return new DataPacket((short) response.length, (short) 1, response);
+        } catch (Exception e) {
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+        }
     }
-  
 }

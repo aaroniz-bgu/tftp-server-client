@@ -12,5 +12,9 @@
 /client/B
 /client/kelev yam.txt
 /client/kelev_yam.mp3
+
+# Binaries and outputs:
 /server/target/
+/server/target/*
 /client/target/
+/client/target/*

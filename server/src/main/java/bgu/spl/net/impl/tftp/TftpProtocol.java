@@ -6,6 +6,7 @@ import bgu.spl.net.impl.tftp.packets.AbstractPacket;
 import bgu.spl.net.impl.tftp.packets.AcknowledgementPacket;
 import bgu.spl.net.impl.tftp.packets.ErrorPacket;
 import bgu.spl.net.impl.tftp.packets.LoginRequestPacket;
+import bgu.spl.net.impl.tftp.services.TftpService;
 import bgu.spl.net.srv.Connections;
 
 import java.util.NoSuchElementException;
@@ -28,8 +29,8 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
         this.connectionId = connectionId;
         this.connections  = connections;
 
-        // High coupling here buddy:
-        controller = new TftpApi();
+        // High coupling here buddy: TODO FIX COUPLING
+        controller = new TftpApi(new TftpService());
         // Check if anything else should be done here.
     }
 
@@ -41,8 +42,20 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 
         // Retrieve op code:
         short opCode = EncodeDecodeHelper.byteToShort(new byte[]{message[0], message[1]});
-        Operation op = Operation.OPS[opCode]; // todo if out of bounds send illegal op.
+        Operation op;
 
+        try {
+            op = Operation.OPS[opCode];
+        } catch (IndexOutOfBoundsException e) {
+            connections.send(connectionId,
+                    new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE, "Illegal TFTP operation").getBytes());
+            return;
+        }
+
+        if(op == Operation.DISC) {
+            disconnect();
+            return;
+        }
         // Check if we're logged before giving any service:
         if(!isLogged) {
             if(op == Operation.LOGRQ) {
@@ -54,9 +67,6 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
                                 .getBytes());
             }
             return;
-            // Check whether the request is to disconnect.
-        } else if(op == Operation.DISC) {
-            disconnect();
         }
 
         // Call the API and get response:
@@ -73,10 +83,6 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
 
             // Respond to the user.
             connections.send(connectionId, controllerResponse.getBytes());
-        } else {
-            connections.send(connectionId, new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE,
-                    "Operation " + opCode + " isn't supported.")
-                    .getBytes());
         }
     }
 
@@ -88,8 +94,9 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
             connections.disconnect(connectionId);
             terminate = true;
             isLogged  = false;
-            connections.send(connectionId, new AcknowledgementPacket(DEFAULT_ACK).getBytes());
         } catch (RuntimeException e) {
+            // TBH THIS IS NOT GOOD, THE CONNECTION IS DELETED AND CLOSED ALREADY
+            // WE CAN'T CHANGE THE INTERFACE SO WE CAN'T GET THE CONNECTION AFTER THIS:
             connections.send(connectionId, new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage()).getBytes());
         }
     }
@@ -131,8 +138,10 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
                 return controller.listDirectoryRequest();
             case DELRQ:
                 return controller.deleteRequest(request);
+            case ACK:
+                return controller.acknowledgementRequest(request);
             default:
-                return null;
+                return new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE, "Operation is not supported.");
         }
     }
 

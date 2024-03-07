@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.util.ConcurrentModificationException;
 
+import static bgu.spl.net.impl.tftp.GlobalConstants.ENCODING_FORMAT;
 import static bgu.spl.net.impl.tftp.GlobalConstants.MAX_DATA_PACKET_SIZE;
 import static bgu.spl.net.impl.tftp.services.ServicesConstants.WORK_DIR;
 
@@ -20,6 +21,7 @@ import static bgu.spl.net.impl.tftp.services.ServicesConstants.WORK_DIR;
 public class TftpService implements ITftpService {
 
     private String currentFileName;
+    private String filesList;
 
     /**
      * Checks whether the user is trying any funny business.
@@ -47,10 +49,9 @@ public class TftpService implements ITftpService {
             if (!new File(WORK_DIR + filename).delete()) {
                 throw new RuntimeException("Failed to delete file.");
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
             ConcurrencyHelper.getInstance().deletionCompleted(filename);
+        } catch (Exception e) {
+            throw e;
         }
     }
 
@@ -66,8 +67,15 @@ public class TftpService implements ITftpService {
      * @throws IOException If there was some kind of IO faulty while reading the file.     * @throws Exception
      */
     private byte[] readFileHelper(short block) throws Exception{
+        if(currentFileName == null) {
+            return new byte[0];
+        }
         try {
-            ConcurrencyHelper.getInstance().read(currentFileName);
+            if(block == 0) {
+                ConcurrencyHelper.getInstance().read(currentFileName);
+            } else {
+                block--;
+            }
 
             InputStream stream = new FileInputStream(new File(WORK_DIR + currentFileName));
             long skipBytes = block * MAX_DATA_PACKET_SIZE;
@@ -77,7 +85,8 @@ public class TftpService implements ITftpService {
             int read = stream.read(output);
             stream.close();
 
-            if(read == -1) {
+            if(read == -1 || read == 0) {
+                currentFileName = null;
                 return new byte[0];
             } else if (read < MAX_DATA_PACKET_SIZE) {
                 ConcurrencyHelper.getInstance().free(currentFileName);
@@ -140,8 +149,21 @@ public class TftpService implements ITftpService {
         return readFileHelper(block);
     }
 
+    public byte[] handleAcknowledgement(short block) throws Exception {
+        if(currentFileName == null && filesList == null) {
+            return null;
+        }
+        if(currentFileName != null) {
+            return readFileHelper(block);
+        } else {
+            return continuousFilesReader(block);
+        }
+    }
+
     /**
      * Returns whether a file can be written or not to the server.
+     * Will mark the file as being written if the file doesn't exist in the ConcurrencyHelper.
+     *
      * @param filename file to write
      * @return True if no such already file exists.
      * @throws IOException Read createNewFile in {@link java.io.File}
@@ -149,36 +171,110 @@ public class TftpService implements ITftpService {
      */
     @Override
     public boolean writeRequest(String filename) throws Exception {
-        if(isIllegalFileName(filename)) {
+        if (isIllegalFileName(filename)) {
             throw new IllegalArgumentException("Illegal file name!");
         }
-        if(new File(WORK_DIR + filename).createNewFile()) {
-            currentFileName = filename;
-            return true;
+        try {
+            // Mark the file as being written before creating it
+            ConcurrencyHelper.getInstance().write(filename);
+            if (new File(WORK_DIR + filename).createNewFile()) {
+                currentFileName = filename;
+                return true;
+            } else {
+                // If file creation fails, mark the write operation as completed to avoid locking the file.
+                // This shouldn't happen, but just in case.
+                ConcurrencyHelper.getInstance().writeCompleted(filename);
+                return false;
+            }
+        } catch (Exception e) {
+            ConcurrencyHelper.getInstance().writeCompleted(filename);
+            currentFileName = null;
+            throw e;
         }
-        return false;
     }
+
 
     /**
      * Writes/appends the data to the currently being written file.
+     * Will release the file from being written if the data is less than the maximum data packet size
+     * or an error occurs in the ConcurrencyHelper.
+     *
      * @param data data to write
+     * @return The file's name when writing is done.
      * @throws IllegalStateException If no file is currently being written, which means the service is in illegal
      * state.
      * @throws IOException Read write in {@link java.io.OutputStream}.
      */
     @Override
-    public void writeData(byte[] data) throws Exception {
-        if(currentFileName == null) {
+    public String writeData(byte[] data) throws Exception {
+        if (currentFileName == null) {
             throw new IllegalStateException("No file is being written currently.");
         }
         File file = new File(WORK_DIR + currentFileName);
         OutputStream stream = new FileOutputStream(file, true);
-        stream.write(data);
-        stream.close();
+        try {
+            stream.write(data);
+            stream.close();
+            // Check if this is the last block of the file
+            if (data.length < MAX_DATA_PACKET_SIZE) {
+                // Mark the write operation as completed
+                ConcurrencyHelper.getInstance().writeCompleted(currentFileName);
+                String output = currentFileName;
+                currentFileName = null; // Reset currentFileName as the write operation is completed
+                return output;
+            }
+        } catch (IOException e) {
+            // Handle IOException
+            ConcurrencyHelper.getInstance().writeCompleted(currentFileName);
+            currentFileName = null;
+            stream.close();
+            throw e;
+        }
+        return null;
     }
 
+    /**
+     * Lists all the files in the server's directory.
+     * Will list them in the following format:
+     * (file name 1)\n
+     * (file name 2)\n
+     * ⋯
+     * (file name n)\n
+     * Will exclude files that are still being created.
+     * @return All the files in the server that are not still being created.
+     * @throws IOException If some sort of error occurred while listing the files.
+     */
     @Override
-    public String directoryRequest() throws Exception {
-        return null;
+    public byte[] directoryRequest() throws Exception {
+        File directory = new File(WORK_DIR);
+        // Initialize empty list of files
+        StringBuilder fileList = new StringBuilder();
+        // List all files in the directory
+        String[] files = directory.list();
+        if (files == null) {
+            throw new IOException("Directory does not exist or an I/O error occurred");
+        }
+        ConcurrencyHelper helper = ConcurrencyHelper.getInstance();
+        for (String file : files) {
+            if (!helper.isBeingWritten(file)) {
+                fileList.append(file).append("\n");
+            }
+        }
+        filesList = fileList.toString();
+        byte[] raw = filesList.getBytes(ENCODING_FORMAT);
+        int outLength = Math.min(MAX_DATA_PACKET_SIZE, raw.length);
+        byte[] out = new byte[outLength];
+        System.arraycopy(raw, 0, out, 0, outLength);
+        return out;
+    }
+
+    private byte[] continuousFilesReader(short block) {
+        if(block * MAX_DATA_PACKET_SIZE >= filesList.length()) {
+            filesList = null;
+            return null;
+        }
+        int start = block * MAX_DATA_PACKET_SIZE;
+        int end = Math.min(filesList.length(), (block + 1) * MAX_DATA_PACKET_SIZE);
+        return filesList.substring(start, end).getBytes(ENCODING_FORMAT);
     }
 }

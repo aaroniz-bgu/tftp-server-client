@@ -9,6 +9,8 @@
 # Bunch of useless stuff
 /server/Flies/
 /server/Flies/*
+/server/Files/
+/server/Files/*
 /client/B
 /client/kelev yam.txt
 /client/kelev_yam.mp3

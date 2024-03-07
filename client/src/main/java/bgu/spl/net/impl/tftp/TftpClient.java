@@ -1,7 +1,5 @@
 package bgu.spl.net.impl.tftp;
 
-import bgu.spl.net.impl.tftp.packets.AbstractPacket;
-
 import java.io.*;
 import java.net.Socket;
 

@@ -35,9 +35,11 @@ public class TftpApi {
             response.setBroadcastPacket(new BroadcastPacket(false ,requestPacket.getFileName()));
             return response;
         } catch (ConcurrentModificationException e) {
-            return new ErrorPacket(ACCESS_VIOLATION.ERROR_CODE, e.getMessage());
+            return new ErrorPacket(ACCESS_VIOLATION.ERROR_CODE, e.getMessage()+"");
+        } catch (FileNotFoundException e) {
+            return new ErrorPacket(FILE_NOT_FOUND.ERROR_CODE, e.getMessage()+"");
         } catch (Exception e) {
-            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage());
+            return new ErrorPacket(NOT_DEF.ERROR_CODE, e.getMessage()+"");
         }
     }
 

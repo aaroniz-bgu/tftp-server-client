@@ -38,6 +38,7 @@ public class TftpService implements ITftpService {
      * @throws ConcurrentModificationException If the file is currently being read.
      * @throws IllegalArgumentException If the file name contains illegal characters.
      * @throws RuntimeException If the file deletion was not successful.
+     * @throws FileNotFoundException If the file is not found.
      */
     @Override
     public void deleteFile(String filename) throws Exception {
@@ -46,11 +47,22 @@ public class TftpService implements ITftpService {
         }
         try {
             ConcurrencyHelper.getInstance().delete(filename);
-            if (!new File(new File(WORK_DIR), filename).delete()) {
+        } catch (ConcurrentModificationException e) {
+            throw e;
+        }
+        File f = new File(new File(WORK_DIR), filename);
+        if(!f.exists()) {
+            ConcurrencyHelper.getInstance().deletionCompleted(filename);
+            throw new FileNotFoundException("File not found.");
+        }
+        try {
+            if (!f.delete()) {
+                ConcurrencyHelper.getInstance().deletionCompleted(filename);
                 throw new RuntimeException("Failed to delete file.");
             }
             ConcurrencyHelper.getInstance().deletionCompleted(filename);
         } catch (Exception e) {
+            ConcurrencyHelper.getInstance().deletionCompleted(filename);
             throw e;
         }
     }
@@ -99,17 +111,16 @@ public class TftpService implements ITftpService {
             return output;
             // We're not calling free in finally because the file may be still in reading progress.
         } catch (ConcurrentModificationException e) {
-            ConcurrencyHelper.getInstance().free(currentFileName);
             currentFileName = null;
-            throw new RuntimeException(e);
+            throw e;
         } catch (FileNotFoundException e) {
             ConcurrencyHelper.getInstance().free(currentFileName);
             currentFileName = null;
-            throw new RuntimeException(e);
+            throw e;
         } catch (IOException e) {
             ConcurrencyHelper.getInstance().free(currentFileName);
             currentFileName = null;
-            throw new RuntimeException(e);
+            throw e;
         }
     }
 

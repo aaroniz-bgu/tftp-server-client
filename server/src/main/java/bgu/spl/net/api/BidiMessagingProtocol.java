@@ -14,4 +14,9 @@ public interface BidiMessagingProtocol<T>  {
      * @return true if the connection should be terminated
      */
     boolean shouldTerminate();
+
+	/**
+	 * Used for disconnecting a single connection when a socket is closed unexpectedly.
+	 */
+	void disconnect();
 }

@@ -51,6 +51,7 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
             message = new LinkedList<>();
             operation = NO_OP;
             packetSize = -1;
+            isData = false;
             return result;
         }
         return null;

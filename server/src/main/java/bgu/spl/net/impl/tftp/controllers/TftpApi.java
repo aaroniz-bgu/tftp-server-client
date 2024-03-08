@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.util.ConcurrentModificationException;
 
 import static bgu.spl.net.impl.tftp.GlobalConstants.DEFAULT_ACK;
-import static bgu.spl.net.impl.tftp.GlobalConstants.ENCODING_FORMAT;
 import static bgu.spl.net.impl.tftp.TftpErrorCodes.*;
 
 /**
@@ -71,7 +70,7 @@ public class TftpApi {
     public AbstractPacket acknowledgementRequest(byte[] request) {
         try {
             AcknowledgementPacket requestPacket = new AcknowledgementPacket(request);
-            byte[] nextBlock = service.handleAcknowledgement((short) (requestPacket.getBlockNumber() + 1));
+            byte[] nextBlock = service.handleAcknowledgement((short) (requestPacket.getBlockNumber()));
             if(nextBlock == null) {
                 return null;
             }

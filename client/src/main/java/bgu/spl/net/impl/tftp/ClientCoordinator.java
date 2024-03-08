@@ -73,6 +73,9 @@ public class ClientCoordinator {
         return false;
     }
 
+    /**
+     * Wait until the last request is handled before allowing user to send another request.
+     */
     private void waitEndHandle() {
         while (lastSentRequest != Operation.NO_OP) {
             // Wait for acknowledgement / error:
@@ -114,6 +117,13 @@ public class ClientCoordinator {
             try {
                 lastSentRequest = Operation.RRQ;
                 filesHandler = new FilesHandler(packet.getFileName());
+                // Check if the client already has a file with this name.
+                if (filesHandler.fileExists()) {
+                    print("You already have a file with this name.");
+                    lastSentRequest = Operation.NO_OP;
+                    filesHandler = null;
+                    return false;
+                }
                 filesHandler.createNewFile();
                 protocol.send(packet);
                 waitEndHandle();

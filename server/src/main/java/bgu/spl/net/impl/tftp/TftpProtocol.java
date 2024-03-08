@@ -140,6 +140,8 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
                 return controller.deleteRequest(request);
             case ACK:
                 return controller.acknowledgementRequest(request);
+            case LOGRQ:
+                return new ErrorPacket(NOT_DEF.ERROR_CODE, "User is already logged in.");
             default:
                 return new ErrorPacket(ILLEGAL_OPERATION.ERROR_CODE, "Operation is not supported.");
         }

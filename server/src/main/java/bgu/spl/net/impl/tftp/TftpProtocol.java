@@ -89,7 +89,7 @@ public class TftpProtocol implements BidiMessagingProtocol<byte[]>  {
     /**
      * Disconnects the connection.
      */
-    private void disconnect() {
+    public void disconnect() {
         try {
             connections.disconnect(connectionId);
             terminate = true;

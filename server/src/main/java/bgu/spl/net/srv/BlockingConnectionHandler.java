@@ -39,7 +39,10 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
             }
 
         } catch (IOException ex) {
-            ex.printStackTrace();
+            connected = false;
+            protocol.disconnect();
+            System.out.println("Oh no... we lost one.");
+            //ex.printStackTrace();
         }
 
     }
@@ -53,6 +56,7 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
     @Override
     public void send(T msg) {
         //IMPLEMENT IF NEEDED - IT'S NEEDED
+        if(!connected) return;
         try {
             sock.getOutputStream().write(encdec.encode(msg));
             sock.getOutputStream().flush();

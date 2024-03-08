@@ -230,6 +230,12 @@ public class TftpService implements ITftpService {
             currentFileName = null;
             stream.close();
             throw e;
+        } catch (Exception e) {
+            // Handle any other exception
+            ConcurrencyHelper.getInstance().writeCompleted(currentFileName);
+            currentFileName = null;
+            stream.close();
+            throw e;
         }
         return null;
     }

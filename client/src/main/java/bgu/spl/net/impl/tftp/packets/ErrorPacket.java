@@ -44,9 +44,6 @@ public class ErrorPacket extends AbstractPacket{
         if (errorMessage == null) {
             throw new IllegalArgumentException("Error message cannot be null.");
         }
-        if (errorMessage.length() == 0) {
-            throw new IllegalArgumentException("Error message cannot be empty.");
-        }
         if (errorMessage.contains("\0")) {
             throw new IllegalArgumentException("Error message cannot contain null character.");
         }

@@ -270,7 +270,7 @@ public class TftpService implements ITftpService {
     }
 
     private byte[] continuousFilesReader(short block) {
-        if(MAX_DATA_PACKET_SIZE < (block + 1) * MAX_DATA_PACKET_SIZE - filesList.length()) {
+        if(filesList.length() < block * MAX_DATA_PACKET_SIZE) {
             filesList = null;
             return null;
         }

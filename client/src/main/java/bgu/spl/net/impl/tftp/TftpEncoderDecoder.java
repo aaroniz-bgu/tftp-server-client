@@ -29,7 +29,9 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
         message.add(nextByte);
         // Determine op code:
         if(message.size() == 2) {
-            operation = Operation.OPS[EncodeDecodeHelper.byteToShort(new byte[]{message.getFirst(), message.getLast()})];
+            // for debug purposes:
+            short opCode = EncodeDecodeHelper.byteToShort(new byte[]{message.getFirst(), message.getLast()});
+            operation = Operation.OPS[opCode];
             // determine length to read if not terminated by delimiter.
             if(operation == DIRQ || operation == DISC) {
                 // those are ending after 2 bytes.

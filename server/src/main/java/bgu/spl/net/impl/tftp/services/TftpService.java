@@ -255,7 +255,7 @@ public class TftpService implements ITftpService {
         if (files == null) {
             throw new IOException("Directory does not exist or an I/O error occurred");
         }
-        ConcurrencyHelper helper = ConcurrencyHelper.getInstance();
+        final ConcurrencyHelper helper = ConcurrencyHelper.getInstance();
         for (String file : files) {
             if (!helper.isBeingWritten(file)) {
                 fileList.append(file).append("\n");
@@ -270,7 +270,7 @@ public class TftpService implements ITftpService {
     }
 
     private byte[] continuousFilesReader(short block) {
-        if(block * MAX_DATA_PACKET_SIZE >= filesList.length()) {
+        if(MAX_DATA_PACKET_SIZE < block * MAX_DATA_PACKET_SIZE - filesList.length()) {
             filesList = null;
             return null;
         }

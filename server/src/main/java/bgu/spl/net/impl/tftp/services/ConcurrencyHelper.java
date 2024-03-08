@@ -44,8 +44,8 @@ public class ConcurrencyHelper {
      * @throws ConcurrentModificationException If the file currently being deleted.
      */
     public synchronized void read(String file) throws ConcurrentModificationException {
-        if(beingDeleted.contains(file)) {
-            throw new ConcurrentModificationException("File currently being removed by another user.");
+        if(beingDeleted.contains(file) || beingWritten.contains(file)) {
+            throw new ConcurrentModificationException("File cannot be read.");
         }
 
         Integer readers = filesToReaders.putIfAbsent(file, 1);
@@ -71,8 +71,8 @@ public class ConcurrencyHelper {
      * @throws ConcurrentModificationException If the file currently being read.
      */
     public synchronized void delete(String file) throws ConcurrentModificationException {
-        if(filesToReaders.containsKey(file)) {
-            throw new ConcurrentModificationException("File currently being read by another user.");
+        if(filesToReaders.containsKey(file) || beingWritten.contains(file) || beingDeleted.contains(file)) {
+            throw new ConcurrentModificationException("File cannot be deleted.");
         }
 
         beingDeleted.add(file);
@@ -84,8 +84,8 @@ public class ConcurrencyHelper {
      * @throws ConcurrentModificationException If the file currently being written.
      */
     public synchronized void write(String file) throws ConcurrentModificationException {
-        if(filesToReaders.containsKey(file)) {
-            throw new ConcurrentModificationException("File is currently being written by another user.");
+        if(filesToReaders.containsKey(file) || beingDeleted.contains(file) || beingWritten.contains(file)) {
+            throw new ConcurrentModificationException("File cannot be written.");
         }
         beingWritten.add(file);
     }

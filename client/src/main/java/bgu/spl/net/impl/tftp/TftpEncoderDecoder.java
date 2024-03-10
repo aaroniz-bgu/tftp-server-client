@@ -11,6 +11,8 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
     private LinkedList<Byte> message;
     private Operation operation;
     private boolean isData;
+    private boolean isWeird;
+    private int weirdness;
     private int packetSize;
 
     public TftpEncoderDecoder() {
@@ -18,6 +20,8 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
         operation = NO_OP;
         packetSize = -1;
         isData = false;
+        isWeird = false;
+        weirdness = 0;
     }
 
     @Override
@@ -25,7 +29,9 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
         message.add(nextByte);
         // Determine op code:
         if(message.size() == 2) {
-            operation = Operation.OPS[EncodeDecodeHelper.byteToShort(new byte[]{message.getFirst(), message.getLast()})];
+            // for debug purposes:
+            short opCode = EncodeDecodeHelper.byteToShort(new byte[]{message.getFirst(), message.getLast()});
+            operation = Operation.OPS[opCode];
             // determine length to read if not terminated by delimiter.
             if(operation == DIRQ || operation == DISC) {
                 // those are ending after 2 bytes.
@@ -35,6 +41,9 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
                 isData = true;
             } else if (operation == ACK) {
                 packetSize = 4;
+            } else if(operation == ERROR || operation == BCAST) {
+                isWeird = true;
+                weirdness = operation == ERROR ? 6 : 5;
             }
         }
         if(isData && message.size() == 4) {
@@ -52,13 +61,16 @@ public class TftpEncoderDecoder implements MessageEncoderDecoder<byte[]> {
             operation = NO_OP;
             packetSize = -1;
             isData = false;
+            isWeird = false;
             return result;
         }
         return null;
     }
 
     public boolean messageComplete() {
-        return (operation.TERMINATED && message.getLast().equals(TERMINATOR)) || (message.size() == packetSize);
+        return (!isWeird) && (operation.TERMINATED && message.getLast().equals(TERMINATOR))
+                || (message.size() == packetSize)
+                || (isWeird && message.size() > weirdness && message.getLast().equals(TERMINATOR));
     }
 
     @Override
